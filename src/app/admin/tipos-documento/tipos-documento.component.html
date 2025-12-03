@@ -118,8 +118,11 @@
               </div>
             </td>
           </tr>
-          <tr *ngIf="tiposDocumento.length === 0">
+          <tr *ngIf="tiposDocumento.length === 0 && !errorMessage">
             <td colspan="5" class="no-data">No hay tipos de documento registrados</td>
+          </tr>
+          <tr *ngIf="errorMessage">
+            <td colspan="5" class="no-data error-text">{{ errorMessage }}</td>
           </tr>
         </tbody>
       </table>

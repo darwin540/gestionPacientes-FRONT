@@ -19,12 +19,18 @@ export const adminGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (authService.isAuthenticated() && authService.isAdmin()) {
+  const isAuthenticated = authService.isAuthenticated();
+  const isAdmin = authService.isAdmin();
+  
+  console.log('adminGuard check:', { isAuthenticated, isAdmin, token: authService.getToken() });
+
+  if (isAuthenticated && isAdmin) {
     return true;
   }
 
   // Si no es admin, redirigir
-  router.navigate(['/login']);
+  console.log('adminGuard: Acceso denegado, redirigiendo al login');
+  router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
   return false;
 };
 

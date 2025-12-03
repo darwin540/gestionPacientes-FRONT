@@ -26,19 +26,28 @@ export class TiposDocumentoComponent implements OnInit {
   constructor(private tipoDocumentoService: TipoDocumentoService) { }
 
   ngOnInit(): void {
+    console.log('Componente TiposDocumento inicializado');
     this.loadTiposDocumento();
   }
 
   loadTiposDocumento(): void {
     this.tipoDocumentoService.getAll().subscribe({
       next: (data) => {
-        this.tiposDocumento = data;
+        this.tiposDocumento = data || [];
         this.errorMessage = '';
+        console.log('Tipos de documento cargados:', data);
       },
       error: (error) => {
         console.error('Error al cargar tipos de documento:', error);
-        this.errorMessage = 'Error al cargar los tipos de documento';
+        if (error.status === 401 || error.status === 403) {
+          this.errorMessage = 'No tiene permisos para ver los tipos de documento. Por favor, inicie sesión nuevamente.';
+        } else if (error.status === 0) {
+          this.errorMessage = 'No se pudo conectar con el servidor. Verifique que el backend esté corriendo.';
+        } else {
+          this.errorMessage = error.error?.mensaje || error.error?.message || 'Error al cargar los tipos de documento';
+        }
         this.successMessage = '';
+        this.tiposDocumento = [];
       }
     });
   }

@@ -32,7 +32,14 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router
-  ) {}
+  ) {
+    // Asegurar que el usuario se carga desde localStorage al iniciar
+    const storedUser = this.getStoredUser();
+    if (storedUser) {
+      this.currentUserSubject.next(storedUser);
+      console.log('Usuario cargado desde localStorage:', storedUser);
+    }
+  }
 
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials).pipe(
@@ -60,12 +67,17 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    const hasToken = !!token;
+    console.log('isAuthenticated check:', { hasToken, tokenExists: !!token });
+    return hasToken;
   }
 
   hasRole(role: string): boolean {
     const user = this.getCurrentUser();
-    return user?.roles.includes(role) ?? false;
+    const hasRole = user?.roles?.includes(role) ?? false;
+    console.log('hasRole check:', { role, userRoles: user?.roles, hasRole });
+    return hasRole;
   }
 
   isAdmin(): boolean {
