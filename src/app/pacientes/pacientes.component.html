@@ -1,0 +1,245 @@
+<div class="admin-container">
+  <app-sidebar></app-sidebar>
+  
+  <div class="admin-content">
+    <!-- Vista de Administrador -->
+    <div *ngIf="isAdmin()" class="pacientes-container">
+      <div class="header-section">
+        <div>
+          <h2>Pacientes por Profesional</h2>
+          <p class="subtitle" *ngIf="profesionalesPacientes.length > 0">
+            Total: {{ getTotalPacientes() }} paciente(s) en {{ profesionalesPacientes.length }} profesional(es)
+          </p>
+        </div>
+      </div>
+
+      <!-- Mensajes -->
+      <div *ngIf="errorMessage" class="alert alert-error">
+        {{ errorMessage }}
+      </div>
+      <div *ngIf="successMessage" class="alert alert-success">
+        {{ successMessage }}
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading" class="loading-container">
+        <p>Cargando pacientes...</p>
+      </div>
+
+      <!-- Lista de Profesionales con sus Pacientes -->
+      <div *ngIf="!loading && profesionalesPacientes.length > 0" class="profesionales-list">
+        <div *ngFor="let prof of profesionalesPacientes" class="profesional-card">
+          <div class="profesional-header" (click)="toggleProfesional(prof.profesionalId)">
+            <div class="profesional-info">
+              <div class="profesional-name">
+                <span class="expand-icon">{{ isExpanded(prof.profesionalId) ? '▼' : '▶' }}</span>
+                <strong>{{ getNombreCompletoProfesional(prof) }}</strong>
+                <span class="profesional-badge">{{ prof.profesionalProfesion }}</span>
+              </div>
+              <div class="profesional-details">
+                <span class="detail-item">Usuario: {{ prof.profesionalNombreUsuario }}</span>
+                <span class="detail-item">Terapia: {{ prof.profesionalTipoTerapia }}</span>
+                <span class="paciente-count">{{ prof.pacientes.length }} paciente(s)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lista de Pacientes -->
+          <div *ngIf="isExpanded(prof.profesionalId)" class="pacientes-list">
+            <div class="pacientes-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Apellido</th>
+                    <th>Tipo Documento</th>
+                    <th>Número Documento</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let paciente of prof.pacientes">
+                    <td>{{ paciente.id }}</td>
+                    <td><strong>{{ paciente.nombre }}</strong></td>
+                    <td><strong>{{ paciente.apellido }}</strong></td>
+                    <td>{{ paciente.tipoDocumentoNombre }}</td>
+                    <td>{{ paciente.numeroDocumento }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sin datos -->
+      <div *ngIf="!loading && profesionalesPacientes.length === 0 && !errorMessage" class="no-data-container">
+        <p class="no-data-message">No hay pacientes registrados con profesionales asignados.</p>
+        <p class="no-data-hint">Los pacientes aparecerán aquí una vez que se les asigne una terapia con un profesional.</p>
+      </div>
+    </div>
+
+    <!-- Vista de Profesional -->
+    <div *ngIf="!isAdmin()" class="pacientes-container">
+      <div class="header-section">
+        <div>
+          <h2>Gestión de Pacientes</h2>
+          <p class="subtitle">Busque o cree un paciente para ver sus sesiones</p>
+        </div>
+        <button class="btn btn-primary" (click)="openCreateForm()" *ngIf="!showForm">
+          + Nuevo Paciente
+        </button>
+      </div>
+
+      <!-- Mensajes -->
+      <div *ngIf="errorMessage" class="alert alert-error">
+        {{ errorMessage }}
+      </div>
+      <div *ngIf="successMessage" class="alert alert-success">
+        {{ successMessage }}
+      </div>
+
+      <!-- Búsqueda -->
+      <div class="search-section" *ngIf="!showForm">
+        <div class="search-tabs">
+          <button 
+            class="tab-button" 
+            [class.active]="searchType === 'documento'"
+            (click)="searchType = 'documento'; searchResults = []; selectedPaciente = null; showSesiones = false;">
+            Buscar por Cédula
+          </button>
+          <button 
+            class="tab-button" 
+            [class.active]="searchType === 'nombre'"
+            (click)="searchType = 'nombre'; searchResults = []; selectedPaciente = null; showSesiones = false;">
+            Buscar por Nombre y Apellido
+          </button>
+        </div>
+
+        <div class="search-form">
+          <div *ngIf="searchType === 'documento'" class="search-input-group">
+            <input 
+              type="text" 
+              [(ngModel)]="searchDocumento" 
+              placeholder="Ingrese el número de documento"
+              class="form-control"
+              (keyup.enter)="searchPaciente()">
+            <button class="btn btn-primary" (click)="searchPaciente()" [disabled]="searching">
+              {{ searching ? 'Buscando...' : 'Buscar' }}
+            </button>
+          </div>
+
+          <div *ngIf="searchType === 'nombre'" class="search-input-group">
+            <input 
+              type="text" 
+              [(ngModel)]="searchNombre" 
+              placeholder="Nombre"
+              class="form-control">
+            <input 
+              type="text" 
+              [(ngModel)]="searchApellido" 
+              placeholder="Apellido"
+              class="form-control"
+              (keyup.enter)="searchPaciente()">
+            <button class="btn btn-primary" (click)="searchPaciente()" [disabled]="searching">
+              {{ searching ? 'Buscando...' : 'Buscar' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Resultados de búsqueda -->
+        <div *ngIf="searchResults.length > 0 && !selectedPaciente" class="search-results">
+          <h3>Resultados de búsqueda:</h3>
+          <div class="results-list">
+            <div *ngFor="let paciente of searchResults" class="result-item" (click)="selectPaciente(paciente)">
+              <div class="result-content">
+                <strong>{{ paciente.nombre }} {{ paciente.apellido }}</strong>
+                <span class="result-detail">{{ paciente.tipoDocumentoNombre }}: {{ paciente.numeroDocumento }}</span>
+              </div>
+              <span class="result-action">Seleccionar →</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de Crear/Editar -->
+      <div *ngIf="showForm" class="form-section">
+        <div class="form-header">
+          <h3>{{ isEditing ? 'Editar Paciente' : 'Nuevo Paciente' }}</h3>
+          <button class="btn btn-secondary" (click)="cancelForm()">Cancelar</button>
+        </div>
+        
+        <form (ngSubmit)="savePaciente()" class="patient-form">
+          <div class="form-group">
+            <label>Nombre *</label>
+            <input type="text" [(ngModel)]="pacienteForm.nombre" name="nombre" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label>Apellido *</label>
+            <input type="text" [(ngModel)]="pacienteForm.apellido" name="apellido" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label>Tipo de Documento *</label>
+            <select [(ngModel)]="pacienteForm.tipoDocumentoId" name="tipoDocumentoId" class="form-control" required>
+              <option [value]="0">Seleccione...</option>
+              <option *ngFor="let tipo of tiposDocumento" [value]="tipo.id">{{ tipo.nombre }}</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Número de Documento *</label>
+            <input type="text" [(ngModel)]="pacienteForm.numeroDocumento" name="numeroDocumento" class="form-control" required>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="loading">
+              {{ loading ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear') }}
+            </button>
+            <button type="button" class="btn btn-secondary" (click)="cancelForm()">Cancelar</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Información del Paciente Seleccionado -->
+      <div *ngIf="selectedPaciente && !showForm" class="patient-details">
+        <div class="patient-header">
+          <div>
+            <h3>{{ selectedPaciente.nombre }} {{ selectedPaciente.apellido }}</h3>
+            <p class="patient-info">
+              {{ selectedPaciente.tipoDocumentoNombre }}: {{ selectedPaciente.numeroDocumento }}
+            </p>
+          </div>
+          <button class="btn btn-primary" (click)="openEditForm(selectedPaciente)">Editar</button>
+        </div>
+
+        <!-- Sesiones del Paciente -->
+        <div *ngIf="showSesiones" class="sesiones-section">
+          <h4>Historial de Sesiones</h4>
+          
+          <div *ngIf="pacienteSesiones.length === 0" class="no-sesiones">
+            <p>Este paciente no tiene sesiones registradas.</p>
+          </div>
+
+          <div *ngIf="pacienteSesiones.length > 0" class="sesiones-list">
+            <div *ngFor="let fecha of getUniqueDates(pacienteSesiones)" class="sesion-date-group">
+              <div class="date-header">
+                <strong>{{ fecha.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) }}</strong>
+                <span class="session-count">{{ getSesionesByDate(fecha).length }} sesión(es)</span>
+              </div>
+              <div class="sesiones-by-date">
+                <div *ngFor="let sesion of getSesionesByDate(fecha)" class="sesion-item">
+                  <div class="sesion-time">{{ formatDate(sesion.fecha) }}</div>
+                  <div class="sesion-service">
+                    {{ sesion.servicioDepartamentoNombre }} ({{ sesion.servicioDepartamentoAbreviacion }})
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

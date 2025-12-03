@@ -39,7 +39,7 @@
             <span>Pacientes</span>
           </a>
         </li>
-        <li>
+        <li *ngIf="isAdmin()">
           <a routerLink="/terapias" routerLinkActive="active">
             <span class="menu-icon">📋</span>
             <span>Terapias</span>
