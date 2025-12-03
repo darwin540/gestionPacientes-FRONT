@@ -1,6 +1,7 @@
 .admin-container {
   display: flex;
   min-height: calc(100vh - 80px);
+  margin-left: 250px; /* Ancho del sidebar fijo */
 }
 
 .admin-content {
@@ -8,6 +9,7 @@
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .header-section {

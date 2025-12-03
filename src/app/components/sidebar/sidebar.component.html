@@ -1,6 +1,6 @@
-<aside class="sidebar" *ngIf="isAuthenticated() && isAdmin()">
+<aside class="sidebar" *ngIf="isAuthenticated()">
   <nav class="sidebar-nav">
-    <div class="sidebar-section">
+    <div class="sidebar-section" *ngIf="isAdmin()">
       <h3 class="sidebar-title">Administración</h3>
       <ul class="sidebar-menu">
         <li>
@@ -21,7 +21,7 @@
     <div class="sidebar-section">
       <h3 class="sidebar-title">Gestión</h3>
       <ul class="sidebar-menu">
-        <li>
+        <li *ngIf="isAdmin()">
           <a routerLink="/profesionales" routerLinkActive="active">
             <span class="menu-icon">👨‍⚕️</span>
             <span>Profesionales</span>
@@ -42,7 +42,7 @@
       </ul>
     </div>
 
-    <div class="sidebar-section">
+    <div class="sidebar-section" *ngIf="isAdmin()">
       <h3 class="sidebar-title">Otros</h3>
       <ul class="sidebar-menu">
         <li>

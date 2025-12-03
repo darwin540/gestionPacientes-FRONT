@@ -1,6 +1,7 @@
 .admin-container {
   display: flex;
   min-height: calc(100vh - 80px);
+  margin-left: 250px; /* Ancho del sidebar fijo */
 }
 
 .admin-content {
@@ -8,6 +9,7 @@
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .profesionales-container {
@@ -491,6 +493,10 @@ tbody tr:last-child td:last-child {
 
 /* Responsive */
 @media (max-width: 768px) {
+  .admin-container {
+    margin-left: 0 !important;
+  }
+
   .profesionales-container {
     padding: 1rem;
   }
