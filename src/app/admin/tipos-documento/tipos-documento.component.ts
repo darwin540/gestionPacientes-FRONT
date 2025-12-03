@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { TipoDocumentoService, TipoDocumento } from '../../services/tipo-documento.service';
@@ -23,19 +23,30 @@ export class TiposDocumentoComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  constructor(private tipoDocumentoService: TipoDocumentoService) { }
+  constructor(
+    private tipoDocumentoService: TipoDocumentoService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit(): void {
     console.log('Componente TiposDocumento inicializado');
+    console.log('Estado inicial de tiposDocumento:', this.tiposDocumento);
     this.loadTiposDocumento();
   }
 
   loadTiposDocumento(): void {
+    console.log('loadTiposDocumento llamado');
     this.tipoDocumentoService.getAll().subscribe({
       next: (data) => {
-        this.tiposDocumento = data || [];
+        console.log('Datos recibidos del servicio:', data);
+        console.log('Tipo de datos:', typeof data, Array.isArray(data));
+        const nuevosDatos = Array.isArray(data) ? [...data] : [];
+        this.tiposDocumento = nuevosDatos;
         this.errorMessage = '';
-        console.log('Tipos de documento cargados:', data);
+        console.log('Tipos de documento asignados:', this.tiposDocumento);
+        console.log('Longitud del array:', this.tiposDocumento.length);
+        // Forzar detección de cambios
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error al cargar tipos de documento:', error);
@@ -48,6 +59,7 @@ export class TiposDocumentoComponent implements OnInit {
         }
         this.successMessage = '';
         this.tiposDocumento = [];
+        this.cdr.detectChanges(); // Forzar detección de cambios
       }
     });
   }
@@ -62,6 +74,7 @@ export class TiposDocumentoComponent implements OnInit {
     this.showForm = true;
     this.errorMessage = '';
     this.successMessage = '';
+    document.body.style.overflow = 'hidden'; // Prevenir scroll del body
   }
 
   openEditForm(tipo: TipoDocumento): void {
@@ -70,6 +83,7 @@ export class TiposDocumentoComponent implements OnInit {
     this.showForm = true;
     this.errorMessage = '';
     this.successMessage = '';
+    document.body.style.overflow = 'hidden'; // Prevenir scroll del body
   }
 
   closeForm(): void {
@@ -77,6 +91,7 @@ export class TiposDocumentoComponent implements OnInit {
     this.isEditing = false;
     this.errorMessage = '';
     this.successMessage = '';
+    document.body.style.overflow = ''; // Restaurar scroll del body
   }
 
   save(form: NgForm): void {
@@ -167,6 +182,10 @@ export class TiposDocumentoComponent implements OnInit {
         }
       });
     }
+  }
+
+  trackByTipoId(index: number, tipo: TipoDocumento): any {
+    return tipo.id || index;
   }
 }
 
