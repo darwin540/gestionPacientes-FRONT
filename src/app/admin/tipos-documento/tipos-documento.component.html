@@ -31,13 +31,15 @@
               <input 
                 type="text" 
                 id="nombre" 
-                [(ngModel)]="tipoDocumento.nombre" 
+                [ngModel]="tipoDocumento.nombre" 
+                (ngModelChange)="tipoDocumento.nombre = $event.toUpperCase()"
                 name="nombre"
                 #nombre="ngModel"
                 required
                 minlength="2"
                 maxlength="50"
-                placeholder="Ej: DNI, Pasaporte, Cédula">
+                placeholder="Ej: DNI, Pasaporte, Cédula"
+                style="text-transform: uppercase;">
               <div *ngIf="nombre.invalid && nombre.touched" class="error-message">
                 <span *ngIf="nombre.errors?.['required']">El nombre es requerido</span>
                 <span *ngIf="nombre.errors?.['minlength']">El nombre debe tener al menos 2 caracteres</span>
@@ -49,21 +51,13 @@
               <label for="descripcion">Descripción</label>
               <textarea 
                 id="descripcion" 
-                [(ngModel)]="tipoDocumento.descripcion" 
+                [ngModel]="tipoDocumento.descripcion" 
+                (ngModelChange)="tipoDocumento.descripcion = $event ? $event.toUpperCase() : ''"
                 name="descripcion"
                 rows="3"
                 maxlength="255"
-                placeholder="Descripción opcional del tipo de documento"></textarea>
-            </div>
-
-            <div class="form-group">
-              <label class="checkbox-label">
-                <input 
-                  type="checkbox" 
-                  [(ngModel)]="tipoDocumento.activo" 
-                  name="activo">
-                <span>Activo</span>
-              </label>
+                placeholder="Descripción opcional del tipo de documento"
+                style="text-transform: uppercase;"></textarea>
             </div>
 
             <div class="modal-actions">

@@ -53,6 +53,7 @@ export class ServiciosDepartamentosComponent implements OnInit {
     this.showForm = true;
     this.errorMessage = '';
     this.successMessage = '';
+    document.body.style.overflow = 'hidden'; // Prevenir scroll del body
   }
 
   openEditForm(servicio: ServicioDepartamento): void {
@@ -61,6 +62,7 @@ export class ServiciosDepartamentosComponent implements OnInit {
     this.showForm = true;
     this.errorMessage = '';
     this.successMessage = '';
+    document.body.style.overflow = 'hidden'; // Prevenir scroll del body
   }
 
   closeForm(): void {
@@ -68,6 +70,7 @@ export class ServiciosDepartamentosComponent implements OnInit {
     this.isEditing = false;
     this.errorMessage = '';
     this.successMessage = '';
+    document.body.style.overflow = ''; // Restaurar scroll del body
   }
 
   save(form: NgForm): void {
