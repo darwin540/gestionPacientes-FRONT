@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ServicioDepartamentoService, ServicioDepartamento } from '../../services/servicio-departamento.service';
@@ -23,22 +23,43 @@ export class ServiciosDepartamentosComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  constructor(private servicioDepartamentoService: ServicioDepartamentoService) { }
+  constructor(
+    private servicioDepartamentoService: ServicioDepartamentoService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit(): void {
+    console.log('Componente ServiciosDepartamentos inicializado');
+    console.log('Estado inicial de serviciosDepartamentos:', this.serviciosDepartamentos);
     this.loadServiciosDepartamentos();
   }
 
   loadServiciosDepartamentos(): void {
+    console.log('loadServiciosDepartamentos llamado');
     this.servicioDepartamentoService.getAll().subscribe({
       next: (data) => {
-        this.serviciosDepartamentos = data;
+        console.log('Datos recibidos del servicio:', data);
+        console.log('Tipo de datos:', typeof data, Array.isArray(data));
+        const nuevosDatos = Array.isArray(data) ? [...data] : [];
+        this.serviciosDepartamentos = nuevosDatos;
         this.errorMessage = '';
+        console.log('Servicios/Departamentos asignados:', this.serviciosDepartamentos);
+        console.log('Longitud del array:', this.serviciosDepartamentos.length);
+        // Forzar detección de cambios
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error al cargar servicios/departamentos:', error);
-        this.errorMessage = 'Error al cargar los servicios/departamentos';
+        if (error.status === 401 || error.status === 403) {
+          this.errorMessage = 'No tiene permisos para ver los servicios/departamentos. Por favor, inicie sesión nuevamente.';
+        } else if (error.status === 0) {
+          this.errorMessage = 'No se pudo conectar con el servidor. Verifique que el backend esté corriendo.';
+        } else {
+          this.errorMessage = error.error?.mensaje || error.error?.message || 'Error al cargar los servicios/departamentos';
+        }
         this.successMessage = '';
+        this.serviciosDepartamentos = [];
+        this.cdr.markForCheck();
       }
     });
   }
@@ -160,6 +181,10 @@ export class ServiciosDepartamentosComponent implements OnInit {
         }
       });
     }
+  }
+
+  trackByServicioId(index: number, servicio: ServicioDepartamento): any {
+    return servicio.id || index;
   }
 }
 
