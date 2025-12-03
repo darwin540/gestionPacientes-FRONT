@@ -1,0 +1,64 @@
+<aside class="sidebar" *ngIf="isAuthenticated() && isAdmin()">
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">
+      <h3 class="sidebar-title">Administración</h3>
+      <ul class="sidebar-menu">
+        <li>
+          <a routerLink="/admin/pacientes/tipos-documento" routerLinkActive="active">
+            <span class="menu-icon">📋</span>
+            <span>Tipos de Documento</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/servicios-departamentos" routerLinkActive="active">
+            <span class="menu-icon">🏥</span>
+            <span>Servicios/Departamentos</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="sidebar-section">
+      <h3 class="sidebar-title">Gestión</h3>
+      <ul class="sidebar-menu">
+        <li>
+          <a routerLink="/profesionales" routerLinkActive="active">
+            <span class="menu-icon">👨‍⚕️</span>
+            <span>Profesionales</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/pacientes" routerLinkActive="active">
+            <span class="menu-icon">👤</span>
+            <span>Pacientes</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/terapias" routerLinkActive="active">
+            <span class="menu-icon">💊</span>
+            <span>Terapias</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="sidebar-section">
+      <h3 class="sidebar-title">Otros</h3>
+      <ul class="sidebar-menu">
+        <li>
+          <a routerLink="/admin/configuraciones" routerLinkActive="active">
+            <span class="menu-icon">⚙️</span>
+            <span>Configuraciones</span>
+          </a>
+        </li>
+        <li>
+          <a routerLink="/admin/reportes" routerLinkActive="active">
+            <span class="menu-icon">📊</span>
+            <span>Reportes</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</aside>
+

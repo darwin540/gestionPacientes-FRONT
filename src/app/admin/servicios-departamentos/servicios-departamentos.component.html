@@ -1,0 +1,137 @@
+<div class="admin-container">
+  <app-sidebar></app-sidebar>
+  
+  <div class="admin-content">
+    <div class="header-section">
+      <h2>Servicios/Departamentos</h2>
+      <button class="btn-primary" (click)="openCreateForm()">
+        + Nuevo Servicio/Departamento
+      </button>
+    </div>
+
+    <!-- Mensajes -->
+    <div *ngIf="errorMessage" class="alert alert-error">
+      {{ errorMessage }}
+    </div>
+    <div *ngIf="successMessage" class="alert alert-success">
+      {{ successMessage }}
+    </div>
+
+    <!-- Formulario -->
+    <div *ngIf="showForm" class="card form-card">
+      <h3>{{ isEditing ? 'Editar Servicio/Departamento' : 'Nuevo Servicio/Departamento' }}</h3>
+      <form #servicioDepartamentoForm="ngForm" (ngSubmit)="save(servicioDepartamentoForm)">
+        <div class="form-group">
+          <label for="abreviacion">Abreviación *</label>
+          <input 
+            type="text" 
+            id="abreviacion" 
+            [(ngModel)]="servicioDepartamento.abreviacion" 
+            name="abreviacion"
+            #abreviacion="ngModel"
+            required
+            minlength="2"
+            maxlength="20"
+            placeholder="Ej: PSI, TO, FON">
+          <div *ngIf="abreviacion.invalid && abreviacion.touched" class="error-message">
+            <span *ngIf="abreviacion.errors?.['required']">La abreviación es requerida</span>
+            <span *ngIf="abreviacion.errors?.['minlength']">La abreviación debe tener al menos 2 caracteres</span>
+            <span *ngIf="abreviacion.errors?.['maxlength']">La abreviación no puede exceder 20 caracteres</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="nombre">Nombre *</label>
+          <input 
+            type="text" 
+            id="nombre" 
+            [(ngModel)]="servicioDepartamento.nombre" 
+            name="nombre"
+            #nombre="ngModel"
+            required
+            minlength="2"
+            maxlength="100"
+            placeholder="Ej: Psicología, Terapia Ocupacional">
+          <div *ngIf="nombre.invalid && nombre.touched" class="error-message">
+            <span *ngIf="nombre.errors?.['required']">El nombre es requerido</span>
+            <span *ngIf="nombre.errors?.['minlength']">El nombre debe tener al menos 2 caracteres</span>
+            <span *ngIf="nombre.errors?.['maxlength']">El nombre no puede exceder 100 caracteres</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="servicioDepartamento.activo" 
+              name="activo">
+            <span>Activo</span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" [disabled]="servicioDepartamentoForm.invalid">
+            {{ isEditing ? 'Actualizar' : 'Crear' }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="closeForm()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Tabla de Servicios/Departamentos -->
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Abreviación</th>
+            <th>Nombre</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let servicio of serviciosDepartamentos">
+            <td>{{ servicio.id }}</td>
+            <td><strong>{{ servicio.abreviacion }}</strong></td>
+            <td>{{ servicio.nombre }}</td>
+            <td>
+              <span [class]="servicio.activo ? 'badge-success' : 'badge-inactive'">
+                {{ servicio.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td>
+              <div class="actions-cell">
+                <button 
+                  class="btn-icon btn-edit" 
+                  (click)="openEditForm(servicio)"
+                  title="Editar">
+                  ✏️
+                </button>
+                <label class="toggle-switch" [title]="servicio.activo ? 'Desactivar' : 'Activar'">
+                  <input 
+                    type="checkbox" 
+                    [checked]="servicio.activo"
+                    (change)="toggleActivo(servicio)">
+                  <span class="toggle-slider"></span>
+                </label>
+                <button 
+                  class="btn-icon btn-delete" 
+                  (click)="deleteServicioDepartamento(servicio.id!)"
+                  title="Eliminar">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="serviciosDepartamentos.length === 0">
+            <td colspan="5" class="no-data">No hay servicios/departamentos registrados</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,21 @@
+<div class="app-container">
+  <header *ngIf="isAuthenticated()" class="app-header">
+    <h1>{{ title }}</h1>
+    <div class="header-content">
+      <nav class="app-nav">
+        <a routerLink="/profesionales" routerLinkActive="active" *ngIf="isAdmin()">Profesionales</a>
+        <a routerLink="/pacientes" routerLinkActive="active">Pacientes</a>
+        <a routerLink="/terapias" routerLinkActive="active">Terapias</a>
+      </nav>
+      <div class="user-menu">
+        <span class="user-name">{{ getCurrentUserName() }}</span>
+        <button class="btn-logout" (click)="logout()">Cerrar Sesión</button>
+      </div>
+    </div>
+  </header>
+  
+  <main class="app-main">
+    <router-outlet></router-outlet>
+  </main>
+</div>
+

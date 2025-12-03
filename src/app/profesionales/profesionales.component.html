@@ -1,0 +1,154 @@
+<div class="admin-container">
+  <app-sidebar *ngIf="isAdmin()"></app-sidebar>
+  
+  <div class="admin-content">
+    <div class="profesionales-container">
+  <div class="header-section">
+    <h2>Gestión de Profesionales</h2>
+    <button class="btn-primary" (click)="openCreateForm()">
+      + Nuevo Profesional
+    </button>
+  </div>
+
+  <!-- Mensajes -->
+  <div *ngIf="errorMessage" class="alert alert-error">
+    {{ errorMessage }}
+  </div>
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+
+  <!-- Formulario -->
+  <div *ngIf="showForm" class="card form-card">
+    <h3>{{ isEditing ? 'Editar Profesional' : 'Nuevo Profesional' }}</h3>
+    <form #profesionalForm="ngForm" (ngSubmit)="save(profesionalForm)">
+      <div class="form-group">
+        <label for="nombre">Nombre *</label>
+        <input 
+          type="text" 
+          id="nombre" 
+          [(ngModel)]="profesional.nombre" 
+          name="nombre"
+          #nombre="ngModel"
+          required
+          minlength="2"
+          placeholder="Nombre completo del profesional">
+        <div *ngIf="nombre.invalid && nombre.touched" class="error-message">
+          <span *ngIf="nombre.errors?.['required']">El nombre es requerido</span>
+          <span *ngIf="nombre.errors?.['minlength']">El nombre debe tener al menos 2 caracteres</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="nombreUsuario">Nombre de Usuario *</label>
+        <input 
+          type="text" 
+          id="nombreUsuario" 
+          [(ngModel)]="profesional.nombreUsuario" 
+          name="nombreUsuario"
+          #nombreUsuario="ngModel"
+          required
+          minlength="3"
+          pattern="[a-zA-Z0-9_]+"
+          placeholder="Nombre de usuario único">
+        <div *ngIf="nombreUsuario.invalid && nombreUsuario.touched" class="error-message">
+          <span *ngIf="nombreUsuario.errors?.['required']">El nombre de usuario es requerido</span>
+          <span *ngIf="nombreUsuario.errors?.['minlength']">El nombre de usuario debe tener al menos 3 caracteres</span>
+          <span *ngIf="nombreUsuario.errors?.['pattern']">Solo se permiten letras, números y guión bajo</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="profesion">Profesión *</label>
+        <input 
+          type="text" 
+          id="profesion" 
+          [(ngModel)]="profesional.profesion" 
+          name="profesion"
+          required
+          placeholder="Ej: Psicólogo, Terapeuta Ocupacional">
+      </div>
+
+      <div class="form-group">
+        <label for="tipoTerapia">Tipo de Terapia *</label>
+        <input 
+          type="text" 
+          id="tipoTerapia" 
+          [(ngModel)]="profesional.tipoTerapia" 
+          name="tipoTerapia"
+          required
+          placeholder="Ej: Terapia Cognitivo-Conductual">
+      </div>
+
+      <div class="form-group">
+        <label for="valorPorTerapia">Valor por Terapia *</label>
+        <input 
+          type="number" 
+          id="valorPorTerapia" 
+          [(ngModel)]="profesional.valorPorTerapia" 
+          name="valorPorTerapia"
+          #valorPorTerapia="ngModel"
+          required
+          min="0"
+          step="0.01"
+          placeholder="0">
+        <div *ngIf="valorPorTerapia.invalid && valorPorTerapia.touched" class="error-message">
+          <span *ngIf="valorPorTerapia.errors?.['required']">El valor por terapia es requerido</span>
+          <span *ngIf="valorPorTerapia.errors?.['min']">El valor debe ser mayor o igual a 0</span>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary" [disabled]="profesionalForm.invalid">
+          {{ isEditing ? 'Actualizar' : 'Crear' }}
+        </button>
+        <button type="button" class="btn-secondary" (click)="closeForm()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Tabla de Profesionales -->
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Usuario</th>
+          <th>Profesión</th>
+          <th>Tipo de Terapia</th>
+          <th>Valor por Terapia</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let profesional of profesionales">
+          <td>{{ profesional.id }}</td>
+          <td>{{ profesional.nombre }}</td>
+          <td>{{ profesional.nombreUsuario }}</td>
+          <td>{{ profesional.profesion }}</td>
+          <td>{{ profesional.tipoTerapia }}</td>
+          <td>{{ formatCurrency(profesional.valorPorTerapia) }}</td>
+          <td>
+            <div class="actions-cell">
+              <button class="btn-secondary" (click)="openEditForm(profesional)">
+                Editar
+              </button>
+              <button class="btn-danger" (click)="deleteProfesional(profesional.id!)">
+                Eliminar
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="profesionales.length === 0">
+          <td colspan="7" class="no-data">No hay profesionales registrados</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+    </div>
+  </div>
+</div>
+
