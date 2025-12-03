@@ -37,7 +37,6 @@ export class AuthService {
     const storedUser = this.getStoredUser();
     if (storedUser) {
       this.currentUserSubject.next(storedUser);
-      console.log('Usuario cargado desde localStorage:', storedUser);
     }
   }
 
@@ -68,16 +67,12 @@ export class AuthService {
 
   isAuthenticated(): boolean {
     const token = this.getToken();
-    const hasToken = !!token;
-    console.log('isAuthenticated check:', { hasToken, tokenExists: !!token });
-    return hasToken;
+    return !!token;
   }
 
   hasRole(role: string): boolean {
     const user = this.getCurrentUser();
-    const hasRole = user?.roles?.includes(role) ?? false;
-    console.log('hasRole check:', { role, userRoles: user?.roles, hasRole });
-    return hasRole;
+    return user?.roles?.includes(role) ?? false;
   }
 
   isAdmin(): boolean {

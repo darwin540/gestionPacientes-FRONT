@@ -21,11 +21,16 @@ export const routes: Routes = [
     loadComponent: () => import('./admin/tipos-documento/tipos-documento.component').then(m => m.TiposDocumentoComponent),
     canActivate: [adminGuard]
   },
-  {
-    path: 'admin/servicios-departamentos',
-    loadComponent: () => import('./admin/servicios-departamentos/servicios-departamentos.component').then(m => m.ServiciosDepartamentosComponent),
-    canActivate: [adminGuard]
-  },
+      {
+        path: 'admin/servicios-departamentos',
+        loadComponent: () => import('./admin/servicios-departamentos/servicios-departamentos.component').then(m => m.ServiciosDepartamentosComponent),
+        canActivate: [adminGuard]
+      },
+      {
+        path: 'admin/tipos-terapia',
+        loadComponent: () => import('./admin/tipos-terapia/tipos-terapia.component').then(m => m.TiposTerapiaComponent),
+        canActivate: [adminGuard]
+      },
   {
     path: 'pacientes',
     loadComponent: () => import('./pacientes/pacientes.component').then(m => m.PacientesComponent),

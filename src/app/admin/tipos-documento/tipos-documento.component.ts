@@ -29,23 +29,15 @@ export class TiposDocumentoComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    console.log('Componente TiposDocumento inicializado');
-    console.log('Estado inicial de tiposDocumento:', this.tiposDocumento);
     this.loadTiposDocumento();
   }
 
   loadTiposDocumento(): void {
-    console.log('loadTiposDocumento llamado');
     this.tipoDocumentoService.getAll().subscribe({
       next: (data) => {
-        console.log('Datos recibidos del servicio:', data);
-        console.log('Tipo de datos:', typeof data, Array.isArray(data));
         const nuevosDatos = Array.isArray(data) ? [...data] : [];
         this.tiposDocumento = nuevosDatos;
         this.errorMessage = '';
-        console.log('Tipos de documento asignados:', this.tiposDocumento);
-        console.log('Longitud del array:', this.tiposDocumento.length);
-        // Forzar detección de cambios
         this.cdr.markForCheck();
       },
       error: (error) => {

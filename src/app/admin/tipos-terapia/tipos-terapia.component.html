@@ -1,0 +1,140 @@
+<div class="admin-container">
+  <app-sidebar></app-sidebar>
+  
+  <div class="admin-content">
+    <div class="header-section">
+      <h2>Tipos de Terapia</h2>
+      <button class="btn-primary" (click)="openCreateForm()">
+        + Nuevo Tipo de Terapia
+      </button>
+    </div>
+
+    <!-- Mensajes -->
+    <div *ngIf="errorMessage" class="alert alert-error">
+      {{ errorMessage }}
+    </div>
+    <div *ngIf="successMessage" class="alert alert-success">
+      {{ successMessage }}
+    </div>
+
+    <!-- Modal de Formulario -->
+    <div *ngIf="showForm" class="modal-overlay" (click)="closeForm()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>{{ isEditing ? 'Editar Tipo de Terapia' : 'Nuevo Tipo de Terapia' }}</h3>
+          <button class="modal-close" (click)="closeForm()" type="button">×</button>
+        </div>
+        <div class="modal-body">
+          <form #tipoTerapiaForm="ngForm" (ngSubmit)="save(tipoTerapiaForm)">
+            <div class="form-group">
+              <label for="nombre">Nombre *</label>
+              <input 
+                type="text" 
+                id="nombre" 
+                [ngModel]="tipoTerapia.nombre" 
+                (ngModelChange)="tipoTerapia.nombre = $event.toUpperCase()"
+                name="nombre"
+                #nombre="ngModel"
+                required
+                minlength="2"
+                maxlength="100"
+                placeholder="Ej: Terapia Cognitivo-Conductual"
+                style="text-transform: uppercase;">
+              <div *ngIf="nombre.invalid && nombre.touched" class="error-message">
+                <span *ngIf="nombre.errors?.['required']">El nombre es requerido</span>
+                <span *ngIf="nombre.errors?.['minlength']">El nombre debe tener al menos 2 caracteres</span>
+                <span *ngIf="nombre.errors?.['maxlength']">El nombre no puede exceder 100 caracteres</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="valorUnitario">Valor Unitario *</label>
+              <input 
+                type="number" 
+                id="valorUnitario" 
+                [(ngModel)]="tipoTerapia.valorUnitario" 
+                name="valorUnitario"
+                #valorUnitario="ngModel"
+                required
+                min="0"
+                step="0.01"
+                placeholder="0.00">
+              <div *ngIf="valorUnitario.invalid && valorUnitario.touched" class="error-message">
+                <span *ngIf="valorUnitario.errors?.['required']">El valor unitario es requerido</span>
+                <span *ngIf="valorUnitario.errors?.['min']">El valor debe ser mayor o igual a 0</span>
+              </div>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" (click)="closeForm()">
+                Cancelar
+              </button>
+              <button type="submit" class="btn-primary" [disabled]="tipoTerapiaForm.invalid">
+                {{ isEditing ? 'Actualizar' : 'Crear' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de Tipos de Terapia -->
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Valor Unitario</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngIf="tiposTerapia.length > 0">
+            <tr *ngFor="let tipo of tiposTerapia; trackBy: trackByTipoId">
+              <td>{{ tipo.id }}</td>
+              <td><strong>{{ tipo.nombre }}</strong></td>
+              <td>{{ formatCurrency(tipo.valorUnitario) }}</td>
+              <td>
+                <span [class]="tipo.activo ? 'badge-success' : 'badge-inactive'">
+                  {{ tipo.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <div class="actions-cell">
+                  <button 
+                    class="btn-icon btn-edit" 
+                    (click)="openEditForm(tipo)"
+                    title="Editar">
+                    ✏️
+                  </button>
+                  <label class="toggle-switch" [title]="tipo.activo ? 'Desactivar' : 'Activar'">
+                    <input 
+                      type="checkbox" 
+                      [checked]="tipo.activo"
+                      (change)="toggleActivo(tipo)">
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <button 
+                    class="btn-icon btn-delete" 
+                    (click)="deleteTipoTerapia(tipo.id!)"
+                    title="Eliminar">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+          <tr *ngIf="tiposTerapia.length === 0 && !errorMessage">
+            <td colspan="5" class="no-data">No hay tipos de terapia registrados</td>
+          </tr>
+          <tr *ngIf="errorMessage">
+            <td colspan="5" class="no-data error-text">{{ errorMessage }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+

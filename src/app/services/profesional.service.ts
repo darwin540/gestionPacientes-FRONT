@@ -30,5 +30,9 @@ export class ProfesionalService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  updatePassword(id: number, newPassword: string): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${id}/password`, { password: newPassword });
+  }
 }
 

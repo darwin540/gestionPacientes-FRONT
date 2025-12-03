@@ -1,5 +1,5 @@
 <div class="admin-container">
-  <app-sidebar *ngIf="isAdmin()"></app-sidebar>
+  <app-sidebar></app-sidebar>
   
   <div class="admin-content">
     <div class="profesionales-container">
@@ -126,9 +126,9 @@
                 #tipoTerapia="ngModel"
                 required
                 class="form-control">
-                <option value="">Seleccione un tipo de terapia</option>
-                <option *ngFor="let tipo of tiposTerapia" [value]="tipo">
-                  {{ tipo }}
+                <option [ngValue]="null" disabled>Seleccione un tipo de terapia</option>
+                <option *ngFor="let tipo of tiposTerapia" [ngValue]="tipo.nombre">
+                  {{ tipo.nombre }}
                 </option>
               </select>
               <div *ngIf="tipoTerapia.invalid && tipoTerapia.touched" class="error-message">
@@ -148,6 +148,55 @@
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- Modal de Cambio de Contraseña -->
+      <div *ngIf="showPasswordModal && selectedProfesionalForPassword" class="modal-overlay" (click)="closePasswordModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>Cambiar Contraseña</h3>
+            <button class="modal-close" (click)="closePasswordModal()" type="button">×</button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Profesional:</strong> {{ selectedProfesionalForPassword.nombre }} {{ selectedProfesionalForPassword.apellido }}</p>
+            <p><strong>Usuario:</strong> {{ selectedProfesionalForPassword.nombreUsuario }}</p>
+            
+            <!-- Mensajes -->
+            <div *ngIf="errorMessage" class="alert alert-error" style="margin-top: 1rem;">
+              {{ errorMessage }}
+            </div>
+            <div *ngIf="successMessage" class="alert alert-success" style="margin-top: 1rem;">
+              {{ successMessage }}
+            </div>
+            
+            <form (ngSubmit)="updatePassword()">
+              <div class="form-group">
+                <label for="newPassword">Nueva Contraseña *</label>
+                <input 
+                  type="password" 
+                  id="newPassword" 
+                  [(ngModel)]="newPassword"
+                  name="newPassword"
+                  required
+                  minlength="4"
+                  (input)="newPassword = $event.target.value.toLowerCase()"
+                  style="text-transform: lowercase;"
+                  placeholder="Contraseña (minúsculas, mínimo 4 caracteres)"
+                  autocomplete="new-password">
+                <small class="form-hint">La contraseña se convertirá automáticamente a minúsculas</small>
+              </div>
+
+              <div class="modal-actions">
+                <button type="button" class="btn-secondary" (click)="closePasswordModal()">
+                  Cancelar
+                </button>
+                <button type="submit" class="btn-primary" [disabled]="!newPassword || newPassword.trim().length < 4">
+                  Actualizar Contraseña
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -187,6 +236,12 @@
                       (click)="openEditForm(profesional)"
                       title="Editar">
                       ✏️
+                    </button>
+                    <button 
+                      class="btn-icon btn-password" 
+                      (click)="openPasswordModal(profesional)"
+                      title="Cambiar contraseña">
+                      🔒
                     </button>
                     <label class="toggle-switch" [title]="profesional.activo ? 'Desactivar' : 'Activar'">
                       <input 

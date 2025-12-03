@@ -29,23 +29,15 @@ export class ServiciosDepartamentosComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    console.log('Componente ServiciosDepartamentos inicializado');
-    console.log('Estado inicial de serviciosDepartamentos:', this.serviciosDepartamentos);
     this.loadServiciosDepartamentos();
   }
 
   loadServiciosDepartamentos(): void {
-    console.log('loadServiciosDepartamentos llamado');
     this.servicioDepartamentoService.getAll().subscribe({
       next: (data) => {
-        console.log('Datos recibidos del servicio:', data);
-        console.log('Tipo de datos:', typeof data, Array.isArray(data));
         const nuevosDatos = Array.isArray(data) ? [...data] : [];
         this.serviciosDepartamentos = nuevosDatos;
         this.errorMessage = '';
-        console.log('Servicios/Departamentos asignados:', this.serviciosDepartamentos);
-        console.log('Longitud del array:', this.serviciosDepartamentos.length);
-        // Forzar detección de cambios
         this.cdr.markForCheck();
       },
       error: (error) => {

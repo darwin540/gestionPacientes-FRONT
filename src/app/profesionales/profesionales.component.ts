@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -6,6 +6,7 @@ import { Profesional } from '../models/profesional.model';
 import { ProfesionalService } from '../services/profesional.service';
 import { AuthService } from '../services/auth.service';
 import { SidebarComponent } from '../components/sidebar/sidebar.component';
+import { TipoTerapiaService, TipoTerapia } from '../services/tipo-terapia.service';
 
 @Component({
   selector: 'app-profesionales',
@@ -26,15 +27,20 @@ export class ProfesionalesComponent implements OnInit {
     activo: true
   };
   
-  tiposTerapia: string[] = []; // Se cargará desde el backend cuando esté disponible
+  tiposTerapia: TipoTerapia[] = [];
   isEditing = false;
   showForm = false;
+  showPasswordModal = false;
+  selectedProfesionalForPassword: Profesional | null = null;
+  newPassword = '';
   errorMessage = '';
   successMessage = '';
 
   constructor(
     private profesionalService: ProfesionalService,
-    private authService: AuthService
+    private authService: AuthService,
+    private tipoTerapiaService: TipoTerapiaService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   isAdmin(): boolean {
@@ -47,21 +53,39 @@ export class ProfesionalesComponent implements OnInit {
   }
 
   loadTiposTerapia(): void {
-    // TODO: Cuando esté disponible el servicio de terapias, cargar aquí
-    // Por ahora, dejamos el array vacío o con valores de ejemplo si es necesario
-    this.tiposTerapia = [];
+    this.tipoTerapiaService.getActivos().subscribe({
+      next: (data) => {
+        this.tiposTerapia = Array.isArray(data) ? [...data] : [];
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al cargar tipos de terapia:', error);
+        this.tiposTerapia = [];
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   loadProfesionales(): void {
     this.profesionalService.getAll().subscribe({
       next: (data) => {
-        this.profesionales = data;
+        const nuevosDatos = Array.isArray(data) ? [...data] : [];
+        this.profesionales = nuevosDatos;
         this.errorMessage = '';
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error al cargar profesionales:', error);
-        this.errorMessage = 'Error al cargar los profesionales';
+        if (error.status === 401 || error.status === 403) {
+          this.errorMessage = 'No tiene permisos para ver los profesionales. Por favor, inicie sesión nuevamente.';
+        } else if (error.status === 0) {
+          this.errorMessage = 'No se pudo conectar con el servidor. Verifique que el backend esté corriendo.';
+        } else {
+          this.errorMessage = error.error?.mensaje || error.error?.message || 'Error al cargar los profesionales';
+        }
         this.successMessage = '';
+        this.profesionales = [];
+        this.cdr.detectChanges();
       }
     });
   }
@@ -80,6 +104,7 @@ export class ProfesionalesComponent implements OnInit {
     this.showForm = true;
     this.errorMessage = '';
     this.successMessage = '';
+    document.body.classList.add('modal-open');
   }
 
   openEditForm(profesional: Profesional): void {
@@ -91,6 +116,7 @@ export class ProfesionalesComponent implements OnInit {
     this.showForm = true;
     this.errorMessage = '';
     this.successMessage = '';
+    document.body.classList.add('modal-open');
   }
 
   closeForm(): void {
@@ -98,6 +124,7 @@ export class ProfesionalesComponent implements OnInit {
     this.isEditing = false;
     this.errorMessage = '';
     this.successMessage = '';
+    document.body.classList.remove('modal-open');
   }
 
   save(form: NgForm): void {
@@ -153,10 +180,12 @@ export class ProfesionalesComponent implements OnInit {
         this.errorMessage = '';
         this.loadProfesionales();
         this.closeForm();
+        this.cdr.markForCheck();
       },
       error: (error) => {
         console.error('Error al crear profesional:', error);
-        this.errorMessage = error.error?.mensaje || error.error?.error || 'Error al crear el profesional';
+        const errorMsg = error.error?.mensaje || error.error?.error || error.message || 'Error al crear el profesional';
+        this.errorMessage = errorMsg;
         this.successMessage = '';
       }
     });
@@ -177,6 +206,7 @@ export class ProfesionalesComponent implements OnInit {
           this.errorMessage = '';
           this.loadProfesionales();
           this.closeForm();
+          this.cdr.markForCheck();
         },
         error: (error) => {
           console.error('Error al actualizar profesional:', error);
@@ -194,6 +224,7 @@ export class ProfesionalesComponent implements OnInit {
           this.successMessage = 'Profesional eliminado exitosamente';
           this.errorMessage = '';
           this.loadProfesionales();
+          this.cdr.markForCheck();
         },
         error: (error) => {
           console.error('Error al eliminar profesional:', error);
@@ -216,6 +247,7 @@ export class ProfesionalesComponent implements OnInit {
           this.successMessage = `Profesional ${profesionalActualizado.activo ? 'activado' : 'desactivado'} exitosamente`;
           this.errorMessage = '';
           this.loadProfesionales();
+          this.cdr.markForCheck();
         },
         error: (error) => {
           console.error('Error al cambiar estado del profesional:', error);
@@ -241,5 +273,48 @@ export class ProfesionalesComponent implements OnInit {
     return profesional.id;
   }
 
+  openPasswordModal(profesional: Profesional): void {
+    this.selectedProfesionalForPassword = profesional;
+    this.newPassword = '';
+    this.showPasswordModal = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    document.body.classList.add('modal-open');
+  }
+
+  closePasswordModal(): void {
+    this.showPasswordModal = false;
+    this.selectedProfesionalForPassword = null;
+    this.newPassword = '';
+    this.errorMessage = '';
+    this.successMessage = '';
+    document.body.classList.remove('modal-open');
+  }
+
+  updatePassword(): void {
+    if (!this.selectedProfesionalForPassword || !this.selectedProfesionalForPassword.id) {
+      return;
+    }
+
+    if (!this.newPassword || this.newPassword.trim().length < 4) {
+      this.errorMessage = 'La contraseña debe tener al menos 4 caracteres';
+      return;
+    }
+
+    const passwordToUpdate = this.newPassword.toLowerCase().trim();
+    
+    this.profesionalService.updatePassword(this.selectedProfesionalForPassword.id, passwordToUpdate).subscribe({
+      next: () => {
+        this.successMessage = 'Contraseña actualizada exitosamente';
+        this.errorMessage = '';
+        this.closePasswordModal();
+      },
+      error: (error) => {
+        console.error('Error al actualizar contraseña:', error);
+        this.errorMessage = error.error?.mensaje || error.error?.error || 'Error al actualizar la contraseña';
+        this.successMessage = '';
+      }
+    });
+  }
 }
 
