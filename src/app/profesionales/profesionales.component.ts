@@ -18,11 +18,15 @@ export class ProfesionalesComponent implements OnInit {
   profesionales: Profesional[] = [];
   profesional: Profesional = {
     nombre: '',
+    apellido: '',
     nombreUsuario: '',
+    password: '',
     profesion: '',
     tipoTerapia: '',
-    valorPorTerapia: 0
+    activo: true
   };
+  
+  tiposTerapia: string[] = []; // Se cargará desde el backend cuando esté disponible
   isEditing = false;
   showForm = false;
   errorMessage = '';
@@ -39,6 +43,13 @@ export class ProfesionalesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadProfesionales();
+    this.loadTiposTerapia(); // Cargar tipos de terapia (cuando esté disponible)
+  }
+
+  loadTiposTerapia(): void {
+    // TODO: Cuando esté disponible el servicio de terapias, cargar aquí
+    // Por ahora, dejamos el array vacío o con valores de ejemplo si es necesario
+    this.tiposTerapia = [];
   }
 
   loadProfesionales(): void {
@@ -59,10 +70,12 @@ export class ProfesionalesComponent implements OnInit {
     this.isEditing = false;
     this.profesional = {
       nombre: '',
+      apellido: '',
       nombreUsuario: '',
+      password: '',
       profesion: '',
       tipoTerapia: '',
-      valorPorTerapia: 0
+      activo: true
     };
     this.showForm = true;
     this.errorMessage = '';
@@ -71,7 +84,10 @@ export class ProfesionalesComponent implements OnInit {
 
   openEditForm(profesional: Profesional): void {
     this.isEditing = true;
-    this.profesional = { ...profesional };
+    this.profesional = { 
+      ...profesional,
+      password: '' // No mostrar contraseña al editar
+    };
     this.showForm = true;
     this.errorMessage = '';
     this.successMessage = '';
@@ -85,11 +101,33 @@ export class ProfesionalesComponent implements OnInit {
   }
 
   save(form: NgForm): void {
+    // Validar que los campos requeridos estén completos
+    const requiredFields = ['nombre', 'apellido', 'nombreUsuario', 'profesion', 'tipoTerapia'];
+    
+    // La contraseña solo es requerida al crear
+    if (!this.isEditing) {
+      requiredFields.push('password');
+    }
+
+    // Marcar campos como touched
+    requiredFields.forEach(field => {
+      const control = form.controls[field];
+      if (control) {
+        control.markAsTouched();
+      }
+    });
+
+    // Verificar validez excluyendo password si estamos editando y no se ingresó
+    if (this.isEditing && (!this.profesional.password || this.profesional.password.trim() === '')) {
+      // Remover el control de password de la validación
+      const passwordControl = form.controls['password'];
+      if (passwordControl) {
+        passwordControl.clearValidators();
+        passwordControl.updateValueAndValidity();
+      }
+    }
+
     if (form.invalid) {
-      // Marcar todos los campos como touched para mostrar errores
-      Object.keys(form.controls).forEach(key => {
-        form.controls[key].markAsTouched();
-      });
       this.errorMessage = 'Por favor, complete todos los campos requeridos';
       return;
     }
@@ -102,7 +140,14 @@ export class ProfesionalesComponent implements OnInit {
   }
 
   createProfesional(): void {
-    this.profesionalService.create(this.profesional).subscribe({
+    // Normalizar datos antes de enviar
+    const profesionalToSave = {
+      ...this.profesional,
+      nombreUsuario: this.profesional.nombreUsuario.toUpperCase().trim(),
+      password: this.profesional.password?.toLowerCase().trim() || ''
+    };
+    
+    this.profesionalService.create(profesionalToSave).subscribe({
       next: () => {
         this.successMessage = 'Profesional creado exitosamente';
         this.errorMessage = '';
@@ -111,7 +156,7 @@ export class ProfesionalesComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al crear profesional:', error);
-        this.errorMessage = error.error?.mensaje || 'Error al crear el profesional';
+        this.errorMessage = error.error?.mensaje || error.error?.error || 'Error al crear el profesional';
         this.successMessage = '';
       }
     });
@@ -119,7 +164,14 @@ export class ProfesionalesComponent implements OnInit {
 
   updateProfesional(): void {
     if (this.profesional.id) {
-      this.profesionalService.update(this.profesional.id, this.profesional).subscribe({
+      // Normalizar datos antes de enviar
+      const profesionalToSave = {
+        ...this.profesional,
+        nombreUsuario: this.profesional.nombreUsuario.toUpperCase().trim(),
+        password: this.profesional.password?.toLowerCase().trim() || undefined // Solo enviar si tiene valor
+      };
+      
+      this.profesionalService.update(this.profesional.id, profesionalToSave).subscribe({
         next: () => {
           this.successMessage = 'Profesional actualizado exitosamente';
           this.errorMessage = '';
@@ -128,7 +180,7 @@ export class ProfesionalesComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error al actualizar profesional:', error);
-          this.errorMessage = error.error?.mensaje || 'Error al actualizar el profesional';
+          this.errorMessage = error.error?.mensaje || error.error?.error || 'Error al actualizar el profesional';
           this.successMessage = '';
         }
       });
@@ -152,11 +204,42 @@ export class ProfesionalesComponent implements OnInit {
     }
   }
 
-  formatCurrency(value: number): string {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP'
-    }).format(value);
+  toggleActivo(profesional: Profesional): void {
+    const profesionalActualizado = {
+      ...profesional,
+      activo: !profesional.activo
+    };
+    
+    if (profesional.id) {
+      this.profesionalService.update(profesional.id, profesionalActualizado).subscribe({
+        next: () => {
+          this.successMessage = `Profesional ${profesionalActualizado.activo ? 'activado' : 'desactivado'} exitosamente`;
+          this.errorMessage = '';
+          this.loadProfesionales();
+        },
+        error: (error) => {
+          console.error('Error al cambiar estado del profesional:', error);
+          this.errorMessage = error.error?.mensaje || error.error?.error || 'Error al cambiar el estado del profesional';
+          this.successMessage = '';
+          this.loadProfesionales(); // Recargar para revertir el cambio visual
+        }
+      });
+    }
   }
+
+  onNombreUsuarioInput(event: any): void {
+    const input = event.target;
+    this.profesional.nombreUsuario = input.value.toUpperCase();
+  }
+
+  onPasswordInput(event: any): void {
+    const input = event.target;
+    this.profesional.password = input.value.toLowerCase();
+  }
+
+  trackByProfesionalId(index: number, profesional: Profesional): number | undefined {
+    return profesional.id;
+  }
+
 }
 

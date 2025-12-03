@@ -3,152 +3,217 @@
   
   <div class="admin-content">
     <div class="profesionales-container">
-  <div class="header-section">
-    <h2>Gestión de Profesionales</h2>
-    <button class="btn-primary" (click)="openCreateForm()">
-      + Nuevo Profesional
-    </button>
-  </div>
-
-  <!-- Mensajes -->
-  <div *ngIf="errorMessage" class="alert alert-error">
-    {{ errorMessage }}
-  </div>
-  <div *ngIf="successMessage" class="alert alert-success">
-    {{ successMessage }}
-  </div>
-
-  <!-- Formulario -->
-  <div *ngIf="showForm" class="card form-card">
-    <h3>{{ isEditing ? 'Editar Profesional' : 'Nuevo Profesional' }}</h3>
-    <form #profesionalForm="ngForm" (ngSubmit)="save(profesionalForm)">
-      <div class="form-group">
-        <label for="nombre">Nombre *</label>
-        <input 
-          type="text" 
-          id="nombre" 
-          [(ngModel)]="profesional.nombre" 
-          name="nombre"
-          #nombre="ngModel"
-          required
-          minlength="2"
-          placeholder="Nombre completo del profesional">
-        <div *ngIf="nombre.invalid && nombre.touched" class="error-message">
-          <span *ngIf="nombre.errors?.['required']">El nombre es requerido</span>
-          <span *ngIf="nombre.errors?.['minlength']">El nombre debe tener al menos 2 caracteres</span>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="nombreUsuario">Nombre de Usuario *</label>
-        <input 
-          type="text" 
-          id="nombreUsuario" 
-          [(ngModel)]="profesional.nombreUsuario" 
-          name="nombreUsuario"
-          #nombreUsuario="ngModel"
-          required
-          minlength="3"
-          pattern="[a-zA-Z0-9_]+"
-          placeholder="Nombre de usuario único">
-        <div *ngIf="nombreUsuario.invalid && nombreUsuario.touched" class="error-message">
-          <span *ngIf="nombreUsuario.errors?.['required']">El nombre de usuario es requerido</span>
-          <span *ngIf="nombreUsuario.errors?.['minlength']">El nombre de usuario debe tener al menos 3 caracteres</span>
-          <span *ngIf="nombreUsuario.errors?.['pattern']">Solo se permiten letras, números y guión bajo</span>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="profesion">Profesión *</label>
-        <input 
-          type="text" 
-          id="profesion" 
-          [(ngModel)]="profesional.profesion" 
-          name="profesion"
-          required
-          placeholder="Ej: Psicólogo, Terapeuta Ocupacional">
-      </div>
-
-      <div class="form-group">
-        <label for="tipoTerapia">Tipo de Terapia *</label>
-        <input 
-          type="text" 
-          id="tipoTerapia" 
-          [(ngModel)]="profesional.tipoTerapia" 
-          name="tipoTerapia"
-          required
-          placeholder="Ej: Terapia Cognitivo-Conductual">
-      </div>
-
-      <div class="form-group">
-        <label for="valorPorTerapia">Valor por Terapia *</label>
-        <input 
-          type="number" 
-          id="valorPorTerapia" 
-          [(ngModel)]="profesional.valorPorTerapia" 
-          name="valorPorTerapia"
-          #valorPorTerapia="ngModel"
-          required
-          min="0"
-          step="0.01"
-          placeholder="0">
-        <div *ngIf="valorPorTerapia.invalid && valorPorTerapia.touched" class="error-message">
-          <span *ngIf="valorPorTerapia.errors?.['required']">El valor por terapia es requerido</span>
-          <span *ngIf="valorPorTerapia.errors?.['min']">El valor debe ser mayor o igual a 0</span>
-        </div>
-      </div>
-
-      <div class="form-actions">
-        <button type="submit" class="btn-primary" [disabled]="profesionalForm.invalid">
-          {{ isEditing ? 'Actualizar' : 'Crear' }}
-        </button>
-        <button type="button" class="btn-secondary" (click)="closeForm()">
-          Cancelar
+      <div class="header-section">
+        <h2>Gestión de Profesionales</h2>
+        <button class="btn-primary" (click)="openCreateForm()">
+          + Nuevo Profesional
         </button>
       </div>
-    </form>
-  </div>
 
-  <!-- Tabla de Profesionales -->
-  <div class="card">
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Usuario</th>
-          <th>Profesión</th>
-          <th>Tipo de Terapia</th>
-          <th>Valor por Terapia</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let profesional of profesionales">
-          <td>{{ profesional.id }}</td>
-          <td>{{ profesional.nombre }}</td>
-          <td>{{ profesional.nombreUsuario }}</td>
-          <td>{{ profesional.profesion }}</td>
-          <td>{{ profesional.tipoTerapia }}</td>
-          <td>{{ formatCurrency(profesional.valorPorTerapia) }}</td>
-          <td>
-            <div class="actions-cell">
-              <button class="btn-secondary" (click)="openEditForm(profesional)">
-                Editar
+      <!-- Mensajes -->
+      <div *ngIf="errorMessage" class="alert alert-error">
+        {{ errorMessage }}
+      </div>
+      <div *ngIf="successMessage" class="alert alert-success">
+        {{ successMessage }}
+      </div>
+
+      <!-- Modal de Formulario -->
+      <div *ngIf="showForm" class="modal-overlay" (click)="closeForm()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h3>{{ isEditing ? 'Editar Profesional' : 'Nuevo Profesional' }}</h3>
+            <button class="modal-close" (click)="closeForm()">&times;</button>
+          </div>
+          
+          <form #profesionalForm="ngForm" (ngSubmit)="save(profesionalForm)">
+            <div class="form-group">
+              <label for="nombre">Nombre *</label>
+              <input 
+                type="text" 
+                id="nombre" 
+                [(ngModel)]="profesional.nombre" 
+                name="nombre"
+                #nombre="ngModel"
+                required
+                minlength="2"
+                placeholder="Nombre del profesional">
+              <div *ngIf="nombre.invalid && nombre.touched" class="error-message">
+                <span *ngIf="nombre.errors?.['required']">El nombre es requerido</span>
+                <span *ngIf="nombre.errors?.['minlength']">El nombre debe tener al menos 2 caracteres</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="apellido">Apellido *</label>
+              <input 
+                type="text" 
+                id="apellido" 
+                [(ngModel)]="profesional.apellido" 
+                name="apellido"
+                #apellido="ngModel"
+                required
+                minlength="2"
+                placeholder="Apellido del profesional">
+              <div *ngIf="apellido.invalid && apellido.touched" class="error-message">
+                <span *ngIf="apellido.errors?.['required']">El apellido es requerido</span>
+                <span *ngIf="apellido.errors?.['minlength']">El apellido debe tener al menos 2 caracteres</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="nombreUsuario">Nombre de Usuario *</label>
+              <input 
+                type="text" 
+                id="nombreUsuario" 
+                [(ngModel)]="profesional.nombreUsuario" 
+                name="nombreUsuario"
+                #nombreUsuario="ngModel"
+                required
+                minlength="3"
+                pattern="[a-zA-Z0-9_]+"
+                (input)="onNombreUsuarioInput($event)"
+                style="text-transform: uppercase;"
+                placeholder="Nombre de usuario único (MAYÚSCULAS)">
+              <div *ngIf="nombreUsuario.invalid && nombreUsuario.touched" class="error-message">
+                <span *ngIf="nombreUsuario.errors?.['required']">El nombre de usuario es requerido</span>
+                <span *ngIf="nombreUsuario.errors?.['minlength']">El nombre de usuario debe tener al menos 3 caracteres</span>
+                <span *ngIf="nombreUsuario.errors?.['pattern']">Solo se permiten letras, números y guión bajo</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="password">Contraseña *</label>
+              <input 
+                type="password" 
+                id="password" 
+                [(ngModel)]="profesional.password" 
+                name="password"
+                #password="ngModel"
+                [required]="!isEditing"
+                minlength="4"
+                (input)="onPasswordInput($event)"
+                style="text-transform: lowercase;"
+                placeholder="Contraseña (minúsculas)">
+              <div *ngIf="password.invalid && password.touched" class="error-message">
+                <span *ngIf="password.errors?.['required']">La contraseña es requerida</span>
+                <span *ngIf="password.errors?.['minlength']">La contraseña debe tener al menos 4 caracteres</span>
+              </div>
+              <small *ngIf="isEditing" class="form-hint">Dejar vacío para mantener la contraseña actual</small>
+            </div>
+
+            <div class="form-group">
+              <label for="profesion">Profesión *</label>
+              <input 
+                type="text" 
+                id="profesion" 
+                [(ngModel)]="profesional.profesion" 
+                name="profesion"
+                #profesion="ngModel"
+                required
+                placeholder="Ej: Psicólogo, Terapeuta Ocupacional">
+              <div *ngIf="profesion.invalid && profesion.touched" class="error-message">
+                <span *ngIf="profesion.errors?.['required']">La profesión es requerida</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="tipoTerapia">Tipo de Terapia *</label>
+              <select 
+                id="tipoTerapia" 
+                [(ngModel)]="profesional.tipoTerapia" 
+                name="tipoTerapia"
+                #tipoTerapia="ngModel"
+                required
+                class="form-control">
+                <option value="">Seleccione un tipo de terapia</option>
+                <option *ngFor="let tipo of tiposTerapia" [value]="tipo">
+                  {{ tipo }}
+                </option>
+              </select>
+              <div *ngIf="tipoTerapia.invalid && tipoTerapia.touched" class="error-message">
+                <span *ngIf="tipoTerapia.errors?.['required']">El tipo de terapia es requerido</span>
+              </div>
+              <small *ngIf="tiposTerapia.length === 0" class="form-hint">
+                No hay tipos de terapia disponibles. Por favor, cree tipos de terapia en la sección correspondiente.
+              </small>
+            </div>
+
+            <div class="modal-actions">
+              <button type="button" class="btn-secondary" (click)="closeForm()">
+                Cancelar
               </button>
-              <button class="btn-danger" (click)="deleteProfesional(profesional.id!)">
-                Eliminar
+              <button type="submit" class="btn-primary" [disabled]="profesionalForm.invalid">
+                {{ isEditing ? 'Actualizar' : 'Crear' }}
               </button>
             </div>
-          </td>
-        </tr>
-        <tr *ngIf="profesionales.length === 0">
-          <td colspan="7" class="no-data">No hay profesionales registrados</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Tabla de Profesionales -->
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Apellido</th>
+              <th>Usuario</th>
+              <th>Profesión</th>
+              <th>Tipo de Terapia</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngIf="profesionales.length > 0">
+              <tr *ngFor="let profesional of profesionales; trackBy: trackByProfesionalId">
+                <td>{{ profesional.id }}</td>
+                <td><strong>{{ profesional.nombre }}</strong></td>
+                <td><strong>{{ profesional.apellido }}</strong></td>
+                <td>{{ profesional.nombreUsuario }}</td>
+                <td>{{ profesional.profesion }}</td>
+                <td>{{ profesional.tipoTerapia }}</td>
+                <td>
+                  <span [class]="profesional.activo ? 'badge-success' : 'badge-inactive'">
+                    {{ profesional.activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="actions-cell">
+                    <button 
+                      class="btn-icon btn-edit" 
+                      (click)="openEditForm(profesional)"
+                      title="Editar">
+                      ✏️
+                    </button>
+                    <label class="toggle-switch" [title]="profesional.activo ? 'Desactivar' : 'Activar'">
+                      <input 
+                        type="checkbox" 
+                        [checked]="profesional.activo"
+                        (change)="toggleActivo(profesional)">
+                      <span class="toggle-slider"></span>
+                    </label>
+                    <button 
+                      class="btn-icon btn-delete" 
+                      (click)="deleteProfesional(profesional.id!)"
+                      title="Eliminar">
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+            <tr *ngIf="profesionales.length === 0 && !errorMessage">
+              <td colspan="8" class="no-data">No hay profesionales registrados</td>
+            </tr>
+            <tr *ngIf="errorMessage">
+              <td colspan="8" class="no-data error-text">{{ errorMessage }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
-
