@@ -60,6 +60,7 @@
       <button type="submit" [disabled]="isLoading" class="btn-primary">
         <span *ngIf="!isLoading">{{ isEditMode ? 'Actualizar' : 'Crear' }}</span>
         <span *ngIf="isLoading">Guardando...</span>
+        
       </button>
       <a routerLink="/pacientes" class="btn-cancel">Cancelar</a>
     </div>

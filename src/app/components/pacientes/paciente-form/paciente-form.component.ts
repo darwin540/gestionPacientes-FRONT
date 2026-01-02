@@ -82,8 +82,9 @@ export class PacienteFormComponent implements OnInit {
       });
     } else {
       this.pacienteService.crearPaciente(this.paciente).subscribe({
-        next: () => {
-          this.router.navigate(['/pacientes']);
+        next: (pacienteCreado) => {
+          // Redirigir al detalle del paciente recién creado
+          this.router.navigate(['/pacientes', pacienteCreado.id]);
         },
         error: (error) => {
           this.isLoading = false;
