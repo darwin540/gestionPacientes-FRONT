@@ -171,6 +171,19 @@ export class PacienteDetailComponent implements OnInit, OnDestroy {
   }
 
   // Métodos del calendario
+  toggleDia(fecha: string, esDiaDelMes: boolean): void {
+    if (!esDiaDelMes) return; // No permitir seleccionar días de otros meses
+    
+    if (this.diasSeleccionados.has(fecha)) {
+      this.diasSeleccionados.delete(fecha);
+    } else {
+      this.diasSeleccionados.set(fecha, {
+        servicioAbreviatura: '',
+        numeroSesiones: 1
+      });
+    }
+  }
+
   seleccionarDia(fecha: string): void {
     if (!this.diasSeleccionados.has(fecha)) {
       this.diasSeleccionados.set(fecha, {
@@ -182,9 +195,6 @@ export class PacienteDetailComponent implements OnInit, OnDestroy {
 
   deseleccionarDia(fecha: string): void {
     this.diasSeleccionados.delete(fecha);
-    if (this.diaSeleccionadoActual === fecha) {
-      this.diaSeleccionadoActual = null;
-    }
   }
 
   estaDiaSeleccionado(fecha: string): boolean {

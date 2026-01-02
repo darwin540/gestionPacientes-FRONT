@@ -416,12 +416,26 @@
   cursor: not-allowed;
 }
 
+/* Layout del calendario con panel lateral */
+.calendario-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 24px;
+  min-height: 450px;
+}
+
+.calendario-panel {
+  display: flex;
+  flex-direction: column;
+}
+
 /* Estilos para el calendario */
 .calendario-container {
   background: white;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 20px;
+  flex: 1;
 }
 
 .calendario-header {
@@ -476,16 +490,18 @@
 .calendario-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
+  gap: 4px;
 }
 
 .calendario-dia {
-  min-height: 120px;
+  aspect-ratio: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
   border: 2px solid #e0e0e0;
-  border-radius: 6px;
-  padding: 6px;
+  border-radius: 8px;
+  cursor: pointer;
   transition: all 0.2s;
   background-color: white;
   position: relative;
@@ -494,6 +510,7 @@
 .calendario-dia:hover {
   background-color: #f0f7ff;
   border-color: #2563eb;
+  transform: scale(1.05);
 }
 
 .calendario-dia.dia-actual {
@@ -504,127 +521,218 @@
 .calendario-dia.dia-otro-mes {
   color: #ccc;
   background-color: #f8f9fa;
-  opacity: 0.5;
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-.calendario-dia.dia-otro-mes .dia-campos {
-  display: none;
+.calendario-dia.dia-otro-mes:hover {
+  transform: none;
+  border-color: #e0e0e0;
 }
 
-.calendario-dia.dia-con-datos {
-  background-color: #e0f2fe;
-  border-color: #2563eb;
+.calendario-dia.dia-seleccionado {
+  background-color: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.calendario-dia.dia-completo {
+  background-color: #10b981;
+  border-color: #059669;
+  color: white;
+}
+
+.calendario-dia.dia-completo .dia-numero {
+  color: white;
+}
+
+.calendario-dia.dia-completo .dia-check {
+  color: white;
 }
 
 .dia-numero {
   font-weight: 600;
   font-size: 14px;
-  margin-bottom: 4px;
   color: #333;
 }
 
-.dia-campos {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-  margin-top: auto;
-}
-
-.dia-select-servicio {
-  width: 100%;
-  padding: 4px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 11px;
-  background-color: white;
-  cursor: pointer;
-}
-
-.dia-select-servicio:focus {
-  outline: none;
-  border-color: #2563eb;
-}
-
-.dia-input-sesiones {
-  width: 100%;
-  padding: 4px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 11px;
-  text-align: center;
-}
-
-.dia-input-sesiones:focus {
-  outline: none;
-  border-color: #2563eb;
-}
-
-.dia-input-sesiones::placeholder {
+.dia-check {
+  position: absolute;
+  top: 2px;
+  right: 4px;
   font-size: 10px;
-  color: #9ca3af;
+  color: #3b82f6;
+  font-weight: bold;
 }
 
+.calendario-hint {
+  text-align: center;
+  color: #666;
+  font-size: 13px;
+  margin-top: 12px;
+  font-style: italic;
+}
 
-/* Lista de días seleccionados */
-.dias-seleccionados-lista {
-  background-color: #f8f9fa;
+/* Panel de configuración lateral */
+.configuracion-panel {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  padding: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  max-height: 500px;
 }
 
-.dias-seleccionados-lista h5 {
-  margin: 0 0 12px 0;
+.configuracion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #2563eb;
+}
+
+.configuracion-header h4 {
+  margin: 0;
   color: #2563eb;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.badge-count {
+  background-color: #2563eb;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
   font-size: 14px;
   font-weight: 600;
 }
 
-.dias-lista {
+.configuracion-empty {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-height: 200px;
-  overflow-y: auto;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #666;
 }
 
-.dia-lista-item {
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.configuracion-empty p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.configuracion-lista {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.configuracion-dia-item {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 14px;
+  transition: box-shadow 0.2s;
+}
+
+.configuracion-dia-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dia-item-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
-  background-color: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  font-size: 14px;
+  margin-bottom: 12px;
 }
 
-.dia-lista-info {
-  display: flex;
-  gap: 12px;
-  color: #666;
-  font-size: 12px;
+.dia-fecha {
+  font-weight: 600;
+  color: #2563eb;
+  font-size: 15px;
 }
 
-.btn-eliminar-dia-lista {
-  background-color: #ef4444;
-  color: white;
+.btn-eliminar-dia {
+  background-color: #fee2e2;
+  color: #ef4444;
   border: none;
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.3s;
+  transition: all 0.2s;
 }
 
-.btn-eliminar-dia-lista:hover {
-  opacity: 0.9;
+.btn-eliminar-dia:hover {
+  background-color: #ef4444;
+  color: white;
+}
+
+.dia-item-campos {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.campo-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.campo-grupo label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.campo-select,
+.campo-input {
+  padding: 10px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  background-color: white;
+}
+
+.campo-select:focus,
+.campo-input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.campo-input {
+  width: 80px;
+}
+
+@media (max-width: 900px) {
+  .calendario-layout {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .configuracion-panel {
+    max-height: 300px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -662,29 +770,32 @@
   }
 
   .calendario-dia {
-    min-height: 80px;
-    padding: 4px;
+    aspect-ratio: 1;
   }
 
   .dia-numero {
-    font-size: 12px;
+    font-size: 11px;
   }
 
-  .dia-select-servicio,
-  .dia-input-sesiones {
-    font-size: 10px;
-    padding: 3px;
+  .dia-check {
+    font-size: 8px;
   }
 
   .calendario-header h4 {
     font-size: 16px;
   }
 
-  .detalles-dia-panel {
+  .configuracion-panel {
+    padding: 16px;
+  }
+
+  .configuracion-dia-item {
     padding: 12px;
   }
 
-  .dias-lista {
-    max-height: 150px;
+  .campo-select,
+  .campo-input {
+    padding: 8px 10px;
+    font-size: 13px;
   }
 }

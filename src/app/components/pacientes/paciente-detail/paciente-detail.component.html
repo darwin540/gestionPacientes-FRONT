@@ -134,76 +134,92 @@
       </div>
       <div class="modal-body-calendario">
         <form (ngSubmit)="guardarAsignacion()">
-          <!-- Calendario -->
-          <div class="calendario-container">
-            <div class="calendario-header">
-              <button type="button" (click)="mesAnterior()" class="btn-nav-mes">‹</button>
-              <h4>{{ obtenerNombreMes() }} {{ mesActual.getFullYear() }}</h4>
-              <button type="button" (click)="mesSiguiente()" class="btn-nav-mes">›</button>
-            </div>
-            
-            <div class="calendario-dias-semana">
-              <div *ngFor="let i of [0,1,2,3,4,5,6]" class="dia-semana-header">
-                {{ obtenerNombreDiaSemana(i) }}
-              </div>
-            </div>
-            
-            <div class="calendario-grid">
-              <div
-                *ngFor="let dia of obtenerDiasDelMes()"
-                class="calendario-dia"
-                [class.dia-actual]="esDiaDelMesActual(dia)"
-                [class.dia-con-datos]="estaDiaSeleccionado(formatearFecha(dia)) && obtenerDatosDia(formatearFecha(dia))?.servicioAbreviatura"
-                [class.dia-otro-mes]="!esDiaDelMesActual(dia)"
-                (click)="seleccionarDia(formatearFecha(dia)); $event.stopPropagation()"
-              >
-                <div class="dia-numero">{{ dia.getDate() }}</div>
-                <div *ngIf="esDiaDelMesActual(dia)" class="dia-campos" (click)="$event.stopPropagation()">
-                  <select
-                    [id]="'servicio-' + formatearFecha(dia)"
-                    [name]="'servicio-' + formatearFecha(dia)"
-                    [value]="obtenerDatosDia(formatearFecha(dia))?.servicioAbreviatura || ''"
-                    (change)="actualizarServicioDia(formatearFecha(dia), $any($event.target).value)"
-                    (click)="seleccionarDia(formatearFecha(dia)); $event.stopPropagation()"
-                    class="dia-select-servicio"
+          <div class="calendario-layout">
+            <!-- Panel izquierdo: Calendario -->
+            <div class="calendario-panel">
+              <div class="calendario-container">
+                <div class="calendario-header">
+                  <button type="button" (click)="mesAnterior()" class="btn-nav-mes">‹</button>
+                  <h4>{{ obtenerNombreMes() }} {{ mesActual.getFullYear() }}</h4>
+                  <button type="button" (click)="mesSiguiente()" class="btn-nav-mes">›</button>
+                </div>
+                
+                <div class="calendario-dias-semana">
+                  <div *ngFor="let i of [0,1,2,3,4,5,6]" class="dia-semana-header">
+                    {{ obtenerNombreDiaSemana(i) }}
+                  </div>
+                </div>
+                
+                <div class="calendario-grid">
+                  <div
+                    *ngFor="let dia of obtenerDiasDelMes()"
+                    class="calendario-dia"
+                    [class.dia-actual]="esDiaDelMesActual(dia)"
+                    [class.dia-seleccionado]="estaDiaSeleccionado(formatearFecha(dia))"
+                    [class.dia-completo]="estaDiaSeleccionado(formatearFecha(dia)) && obtenerDatosDia(formatearFecha(dia))?.servicioAbreviatura"
+                    [class.dia-otro-mes]="!esDiaDelMesActual(dia)"
+                    (click)="toggleDia(formatearFecha(dia), esDiaDelMesActual(dia))"
                   >
-                    <option value="">Servicio</option>
-                    <option *ngFor="let servicio of servicios" [value]="servicio.abreviatura">
-                      {{ servicio.abreviatura }}
-                    </option>
-                  </select>
-                  <input
-                    type="number"
-                    [id]="'sesiones-' + formatearFecha(dia)"
-                    [name]="'sesiones-' + formatearFecha(dia)"
-                    [value]="obtenerDatosDia(formatearFecha(dia))?.numeroSesiones || ''"
-                    (change)="actualizarSesionesDia(formatearFecha(dia), +$any($event.target).value)"
-                    (click)="seleccionarDia(formatearFecha(dia)); $event.stopPropagation()"
-                    placeholder="Ses."
-                    min="1"
-                    max="2"
-                    class="dia-input-sesiones"
-                  />
+                    <span class="dia-numero">{{ dia.getDate() }}</span>
+                    <span *ngIf="estaDiaSeleccionado(formatearFecha(dia))" class="dia-check">✓</span>
+                  </div>
                 </div>
               </div>
+              
+              <p class="calendario-hint">Haz clic en los días para seleccionarlos</p>
             </div>
-          </div>
 
-          <!-- Resumen de días con datos -->
-          <div *ngIf="diasSeleccionados.size > 0" class="dias-seleccionados-lista">
-            <h5>Resumen de Días con Datos ({{ diasSeleccionados.size }})</h5>
-            <div class="dias-lista">
-              <div *ngFor="let fecha of diasSeleccionados.keys()" class="dia-lista-item">
-                <span>{{ formatearFechaParaMostrar(fecha) }}</span>
-                <div class="dia-lista-info">
-                  <span *ngIf="obtenerDatosDia(fecha)?.servicioAbreviatura">
-                    {{ obtenerDatosDia(fecha)?.servicioAbreviatura }}
-                  </span>
-                  <span *ngIf="obtenerDatosDia(fecha)?.numeroSesiones">
-                    {{ obtenerDatosDia(fecha)?.numeroSesiones }} sesión(es)
-                  </span>
+            <!-- Panel derecho: Configuración de días seleccionados -->
+            <div class="configuracion-panel">
+              <div class="configuracion-header">
+                <h4>Días Seleccionados</h4>
+                <span class="badge-count">{{ diasSeleccionados.size }}</span>
+              </div>
+
+              <div *ngIf="diasSeleccionados.size === 0" class="configuracion-empty">
+                <div class="empty-icon">📅</div>
+                <p>Selecciona uno o más días en el calendario para configurar las sesiones</p>
+              </div>
+
+              <div *ngIf="diasSeleccionados.size > 0" class="configuracion-lista">
+                <div *ngFor="let fecha of diasSeleccionados.keys()" class="configuracion-dia-item">
+                  <div class="dia-item-header">
+                    <span class="dia-fecha">{{ formatearFechaParaMostrar(fecha) }}</span>
+                    <button type="button" (click)="deseleccionarDia(fecha)" class="btn-eliminar-dia">×</button>
+                  </div>
+                  
+                  <div class="dia-item-campos">
+                    <div class="campo-grupo">
+                      <label [for]="'servicio-' + fecha">Servicio</label>
+                      <select
+                        [id]="'servicio-' + fecha"
+                        [name]="'servicio-' + fecha"
+                        [value]="obtenerDatosDia(fecha)?.servicioAbreviatura || ''"
+                        (change)="actualizarServicioDia(fecha, $any($event.target).value)"
+                        class="campo-select"
+                      >
+                        <option value="">Seleccionar...</option>
+                        <option *ngFor="let servicio of servicios" [value]="servicio.abreviatura">
+                          {{ servicio.nombreCompleto }} ({{ servicio.abreviatura }})
+                        </option>
+                      </select>
+                    </div>
+                    
+                    <div class="campo-grupo">
+                      <label [for]="'sesiones-' + fecha">Sesiones</label>
+                      <input
+                        type="number"
+                        [id]="'sesiones-' + fecha"
+                        [name]="'sesiones-' + fecha"
+                        [value]="obtenerDatosDia(fecha)?.numeroSesiones || 1"
+                        (change)="actualizarSesionesDia(fecha, +$any($event.target).value)"
+                        min="1"
+                        max="10"
+                        class="campo-input"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <button type="button" (click)="deseleccionarDia(fecha)" class="btn-eliminar-dia-lista">×</button>
               </div>
             </div>
           </div>
@@ -211,10 +227,11 @@
           <div *ngIf="asignarErrorMessage" class="error-message">
             {{ asignarErrorMessage }}
           </div>
+          
           <div class="modal-actions">
             <button type="button" (click)="cerrarModalAsignar()" class="btn-cancelar">Cancelar</button>
-            <button type="submit" [disabled]="isSavingAsignar" class="btn-guardar">
-              <span *ngIf="!isSavingAsignar">Asignar</span>
+            <button type="submit" [disabled]="isSavingAsignar || diasSeleccionados.size === 0" class="btn-guardar">
+              <span *ngIf="!isSavingAsignar">Asignar ({{ diasSeleccionados.size }} días)</span>
               <span *ngIf="isSavingAsignar">Asignando...</span>
             </button>
           </div>
