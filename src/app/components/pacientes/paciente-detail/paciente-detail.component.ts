@@ -9,7 +9,7 @@ import { RegistroTerapiaService } from '../../../services/registro-terapia.servi
 import { PacienteResponse, PacienteUpdate } from '../../../models/paciente.model';
 import { TipoDocumento } from '../../../models/tipo-documento.enum';
 import { ServicioResponse } from '../../../models/servicio.model';
-import { RegistroTerapiaRequest, RegistroTerapiaItem } from '../../../models/registro-terapia.model';
+import { RegistroTerapiaRequest, RegistroTerapiaItem, RegistroTerapiaResponse, RegistroTerapiaUpdate } from '../../../models/registro-terapia.model';
 
 @Component({
   selector: 'app-paciente-detail',
@@ -32,6 +32,10 @@ export class PacienteDetailComponent implements OnInit, OnDestroy {
   isLoading: boolean = true; // Iniciar como true para mostrar loading inicial
   errorMessage: string = '';
 
+  // Registros/Sesiones del paciente
+  registrosPaciente: RegistroTerapiaResponse[] = [];
+  isLoadingRegistrosPaciente: boolean = false;
+
   // Exponer TipoDocumento para usar en el template
   TipoDocumento = TipoDocumento;
 
@@ -44,10 +48,21 @@ export class PacienteDetailComponent implements OnInit, OnDestroy {
   // Modal de asignación de tipo de terapia
   showAsignarModal: boolean = false;
   servicios: ServicioResponse[] = [];
-  diasSeleccionados: Map<string, { servicioAbreviatura: string; numeroSesiones: number }> = new Map();
+  diasSeleccionados: Map<string, { servicioAbreviatura: string; numeroSesiones: number; registroId?: number; esExistente?: boolean }> = new Map();
+  registrosExistentes: RegistroTerapiaResponse[] = [];
+  fechasOcupadas: Map<string, RegistroTerapiaResponse> = new Map();
   mesActual: Date = new Date();
   asignarErrorMessage: string = '';
   isSavingAsignar: boolean = false;
+  isLoadingRegistros: boolean = false;
+
+  // Modal de confirmación
+  showConfirmacionModal: boolean = false;
+
+  // Modal de error
+  showErrorModal: boolean = false;
+  errorModalTitle: string = '';
+  errorModalMessage: string = '';
 
   ngOnInit(): void {
     const paramSub = this.route.paramMap.subscribe(params => {
@@ -86,6 +101,8 @@ export class PacienteDetailComponent implements OnInit, OnDestroy {
         this.paciente = data;
         this.isLoading = false;
         this.errorMessage = '';
+        // Cargar los registros del paciente
+        this.cargarRegistrosPaciente(id);
         // Forzar detección de cambios después de cargar los datos
         this.cdr.detectChanges();
         console.log('Estado después de cargar - isLoading:', this.isLoading, 'paciente:', this.paciente);
@@ -99,6 +116,28 @@ export class PacienteDetailComponent implements OnInit, OnDestroy {
       }
     });
     this.subscriptions.add(loadSub);
+  }
+
+  cargarRegistrosPaciente(pacienteId: number): void {
+    this.isLoadingRegistrosPaciente = true;
+    this.registrosPaciente = [];
+
+    const registrosSub = this.registroTerapiaService.obtenerRegistrosPorPaciente(pacienteId).subscribe({
+      next: (registros) => {
+        // Ordenar por fecha descendente (más reciente primero)
+        this.registrosPaciente = registros.sort((a, b) => {
+          return new Date(b.fecha).getTime() - new Date(a.fecha).getTime();
+        });
+        this.isLoadingRegistrosPaciente = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al cargar registros del paciente:', error);
+        this.isLoadingRegistrosPaciente = false;
+        this.cdr.detectChanges();
+      }
+    });
+    this.subscriptions.add(registrosSub);
   }
 
   getTipoDocumentoLabel(tipo: TipoDocumento): string {
@@ -157,17 +196,53 @@ export class PacienteDetailComponent implements OnInit, OnDestroy {
   // Métodos para el modal de asignación
   abrirModalAsignar(): void {
     this.diasSeleccionados = new Map();
+    this.fechasOcupadas = new Map();
+    this.registrosExistentes = [];
     this.mesActual = new Date();
     this.asignarErrorMessage = '';
     this.showAsignarModal = true;
     this.cargarServicios();
+    this.cargarRegistrosExistentes();
   }
 
   cerrarModalAsignar(): void {
     this.showAsignarModal = false;
     this.diasSeleccionados = new Map();
+    this.fechasOcupadas = new Map();
+    this.registrosExistentes = [];
     this.mesActual = new Date();
     this.asignarErrorMessage = '';
+  }
+
+  cargarRegistrosExistentes(): void {
+    if (!this.paciente || !this.paciente.id) return;
+
+    this.isLoadingRegistros = true;
+    this.registroTerapiaService.obtenerRegistrosPorPaciente(this.paciente.id).subscribe({
+      next: (registros) => {
+        this.registrosExistentes = registros;
+        this.fechasOcupadas = new Map();
+        registros.forEach(registro => {
+          // Extraer solo la fecha (sin hora)
+          const fecha = registro.fecha.split('T')[0];
+          this.fechasOcupadas.set(fecha, registro);
+        });
+        this.isLoadingRegistros = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al cargar registros existentes:', error);
+        this.isLoadingRegistros = false;
+      }
+    });
+  }
+
+  esFechaOcupada(fecha: string): boolean {
+    return this.fechasOcupadas.has(fecha);
+  }
+
+  obtenerRegistroExistente(fecha: string): RegistroTerapiaResponse | undefined {
+    return this.fechasOcupadas.get(fecha);
   }
 
   // Métodos del calendario
@@ -177,10 +252,23 @@ export class PacienteDetailComponent implements OnInit, OnDestroy {
     if (this.diasSeleccionados.has(fecha)) {
       this.diasSeleccionados.delete(fecha);
     } else {
-      this.diasSeleccionados.set(fecha, {
-        servicioAbreviatura: '',
-        numeroSesiones: 1
-      });
+      // Verificar si es una fecha ocupada
+      const registroExistente = this.fechasOcupadas.get(fecha);
+      if (registroExistente) {
+        // Cargar los datos existentes para edición
+        this.diasSeleccionados.set(fecha, {
+          servicioAbreviatura: registroExistente.servicioAbreviatura,
+          numeroSesiones: registroExistente.numeroSesiones,
+          registroId: registroExistente.id,
+          esExistente: true
+        });
+      } else {
+        this.diasSeleccionados.set(fecha, {
+          servicioAbreviatura: '',
+          numeroSesiones: 1,
+          esExistente: false
+        });
+      }
     }
   }
 
@@ -229,7 +317,7 @@ export class PacienteDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  obtenerDatosDia(fecha: string): { servicioAbreviatura: string; numeroSesiones: number } | null {
+  obtenerDatosDia(fecha: string): { servicioAbreviatura: string; numeroSesiones: number; registroId?: number; esExistente?: boolean } | null {
     return this.diasSeleccionados.get(fecha) || null;
   }
 
@@ -337,38 +425,164 @@ export class PacienteDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isSavingAsignar = true;
     this.asignarErrorMessage = '';
+    // Mostrar modal de confirmación
+    this.showConfirmacionModal = true;
+  }
 
-    // Convertir el Map a array de RegistroTerapiaItem
-    const registros: RegistroTerapiaItem[] = [];
+  cerrarModalConfirmacion(): void {
+    this.showConfirmacionModal = false;
+  }
+
+  // Modal de error
+  mostrarErrorModal(titulo: string, mensaje: string): void {
+    this.errorModalTitle = titulo;
+    this.errorModalMessage = mensaje;
+    this.showErrorModal = true;
+  }
+
+  cerrarErrorModal(): void {
+    this.showErrorModal = false;
+    this.errorModalTitle = '';
+    this.errorModalMessage = '';
+  }
+
+  obtenerNombreServicio(abreviatura: string): string {
+    const servicio = this.servicios.find(s => s.abreviatura === abreviatura);
+    return servicio ? servicio.nombreCompleto : abreviatura;
+  }
+
+  calcularTotalSesiones(): number {
+    let total = 0;
+    this.diasSeleccionados.forEach((datos) => {
+      total += datos.numeroSesiones;
+    });
+    return total;
+  }
+
+  obtenerRegistrosNuevos(): string[] {
+    const nuevos: string[] = [];
     this.diasSeleccionados.forEach((datos, fecha) => {
-      registros.push({
-        fecha: fecha,
-        servicioAbreviatura: datos.servicioAbreviatura,
-        numeroSesiones: datos.numeroSesiones
-      });
+      if (!datos.esExistente) {
+        nuevos.push(fecha);
+      }
+    });
+    return nuevos;
+  }
+
+  obtenerRegistrosActualizar(): string[] {
+    const actualizar: string[] = [];
+    this.diasSeleccionados.forEach((datos, fecha) => {
+      if (datos.esExistente) {
+        actualizar.push(fecha);
+      }
+    });
+    return actualizar;
+  }
+
+  confirmarAsignacion(): void {
+    if (!this.paciente || !this.paciente.id) {
+      return;
+    }
+
+    this.isSavingAsignar = true;
+
+    // Separar registros nuevos y actualizaciones
+    const registrosNuevos: RegistroTerapiaItem[] = [];
+    const registrosActualizar: { id: number; datos: RegistroTerapiaUpdate }[] = [];
+
+    this.diasSeleccionados.forEach((datos, fecha) => {
+      if (datos.esExistente && datos.registroId) {
+        registrosActualizar.push({
+          id: datos.registroId,
+          datos: {
+            fecha: fecha,
+            servicioAbreviatura: datos.servicioAbreviatura,
+            numeroSesiones: datos.numeroSesiones
+          }
+        });
+      } else {
+        registrosNuevos.push({
+          fecha: fecha,
+          servicioAbreviatura: datos.servicioAbreviatura,
+          numeroSesiones: datos.numeroSesiones
+        });
+      }
     });
 
-    const registroRequest: RegistroTerapiaRequest = {
-      pacienteId: this.paciente.id,
-      registros: registros
+    // Procesar operaciones
+    this.procesarAsignaciones(registrosNuevos, registrosActualizar);
+  }
+
+  private procesarAsignaciones(
+    registrosNuevos: RegistroTerapiaItem[],
+    registrosActualizar: { id: number; datos: RegistroTerapiaUpdate }[]
+  ): void {
+    let operacionesCompletadas = 0;
+    const totalOperaciones = (registrosNuevos.length > 0 ? 1 : 0) + registrosActualizar.length;
+    let huboError = false;
+
+    const verificarFinalizacion = () => {
+      operacionesCompletadas++;
+      if (operacionesCompletadas >= totalOperaciones) {
+        this.isSavingAsignar = false;
+        this.showConfirmacionModal = false;
+        
+        if (!huboError) {
+          this.cerrarModalAsignar();
+          if (this.paciente) {
+            this.cargarPaciente(this.paciente.id);
+          }
+        }
+        this.cdr.detectChanges();
+      }
     };
 
-    this.registroTerapiaService.crearRegistros(registroRequest).subscribe({
-      next: () => {
-        this.isSavingAsignar = false;
-        this.cerrarModalAsignar();
-        // Recargar el paciente para mostrar los cambios
-        if (this.paciente) {
-          this.cargarPaciente(this.paciente.id);
+    if (totalOperaciones === 0) {
+      this.isSavingAsignar = false;
+      this.showConfirmacionModal = false;
+      return;
+    }
+
+    // Crear nuevos registros
+    if (registrosNuevos.length > 0) {
+      const registroRequest: RegistroTerapiaRequest = {
+        pacienteId: this.paciente!.id,
+        registros: registrosNuevos
+      };
+
+      this.registroTerapiaService.crearRegistros(registroRequest).subscribe({
+        next: () => {
+          verificarFinalizacion();
+        },
+        error: (error) => {
+          huboError = true;
+          this.isSavingAsignar = false;
+          this.showConfirmacionModal = false;
+          const mensajeError = error.error?.message || error.error?.error || 'Error al crear los registros de terapia';
+          this.mostrarErrorModal('Error al Asignar Terapia', mensajeError);
+          console.error('Error al crear registros:', error);
+          this.cdr.detectChanges();
         }
-      },
-      error: (error) => {
-        this.isSavingAsignar = false;
-        this.asignarErrorMessage = error.error?.message || 'Error al asignar la terapia';
-        console.error('Error al asignar terapia:', error);
-      }
+      });
+    }
+
+    // Actualizar registros existentes
+    registrosActualizar.forEach(registro => {
+      this.registroTerapiaService.actualizarRegistro(registro.id, registro.datos).subscribe({
+        next: () => {
+          verificarFinalizacion();
+        },
+        error: (error) => {
+          huboError = true;
+          this.isSavingAsignar = false;
+          this.showConfirmacionModal = false;
+          const mensajeError = error.error?.message || error.error?.error || 'Error al actualizar el registro de terapia';
+          this.mostrarErrorModal('Error al Actualizar Terapia', mensajeError);
+          console.error('Error al actualizar registro:', error);
+          this.cdr.detectChanges();
+        }
+      });
     });
   }
 }

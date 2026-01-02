@@ -19,6 +19,7 @@
   </div>
 
       <div *ngIf="!isLoading && paciente" class="paciente-content">
+        <!-- Sección de Datos Personales -->
         <div class="detalle-section">
           <div class="section-header">
             <h3>Datos Personales</h3>
@@ -51,6 +52,56 @@
             <div class="detalle-item">
               <span class="detalle-label">Última Actualización:</span>
               <span class="detalle-value">{{ paciente.fechaActualizacion | date:'short' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección de Sesiones/Registros de Terapia -->
+        <div class="sesiones-section">
+          <div class="section-header">
+            <h3>📋 Historial de Sesiones</h3>
+            <span class="badge-total-sesiones">{{ registrosPaciente.length }} registro(s)</span>
+          </div>
+
+          <!-- Loading -->
+          <div *ngIf="isLoadingRegistrosPaciente" class="sesiones-loading">
+            <span>Cargando sesiones...</span>
+          </div>
+
+          <!-- Sin sesiones -->
+          <div *ngIf="!isLoadingRegistrosPaciente && registrosPaciente.length === 0" class="sesiones-empty">
+            <div class="empty-sesiones-icon">📅</div>
+            <p>Este paciente no tiene sesiones registradas.</p>
+            <button (click)="abrirModalAsignar()" class="btn-asignar-primera">
+              + Asignar Primera Sesión
+            </button>
+          </div>
+
+          <!-- Lista de sesiones -->
+          <div *ngIf="!isLoadingRegistrosPaciente && registrosPaciente.length > 0" class="sesiones-lista">
+            <div class="sesiones-table-header">
+              <span class="col-sesion-fecha">Fecha</span>
+              <span class="col-sesion-servicio">Servicio</span>
+              <span class="col-sesion-profesional">Profesional</span>
+              <span class="col-sesion-sesiones">Sesiones</span>
+              <span class="col-sesion-creacion">Registrado</span>
+            </div>
+            <div class="sesiones-table-body">
+              <div *ngFor="let registro of registrosPaciente" class="sesion-row">
+                <span class="col-sesion-fecha">
+                  <span class="fecha-dia">{{ registro.fecha | date:'dd' }}</span>
+                  <span class="fecha-mes">{{ registro.fecha | date:'MMM yyyy' }}</span>
+                </span>
+                <span class="col-sesion-servicio">
+                  <span class="servicio-nombre">{{ registro.servicioNombreCompleto }}</span>
+                  <span class="servicio-abreviatura">({{ registro.servicioAbreviatura }})</span>
+                </span>
+                <span class="col-sesion-profesional">{{ registro.profesionalNombre || 'No asignado' }}</span>
+                <span class="col-sesion-sesiones">
+                  <span class="sesiones-badge">{{ registro.numeroSesiones }}</span>
+                </span>
+                <span class="col-sesion-creacion">{{ registro.fechaCreacion | date:'dd/MM/yy HH:mm' }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -157,16 +208,35 @@
                     [class.dia-actual]="esDiaDelMesActual(dia)"
                     [class.dia-seleccionado]="estaDiaSeleccionado(formatearFecha(dia))"
                     [class.dia-completo]="estaDiaSeleccionado(formatearFecha(dia)) && obtenerDatosDia(formatearFecha(dia))?.servicioAbreviatura"
+                    [class.dia-ocupado]="esFechaOcupada(formatearFecha(dia)) && !estaDiaSeleccionado(formatearFecha(dia))"
                     [class.dia-otro-mes]="!esDiaDelMesActual(dia)"
                     (click)="toggleDia(formatearFecha(dia), esDiaDelMesActual(dia))"
+                    [title]="esFechaOcupada(formatearFecha(dia)) ? 'Fecha con registro existente - Clic para editar' : ''"
                   >
                     <span class="dia-numero">{{ dia.getDate() }}</span>
                     <span *ngIf="estaDiaSeleccionado(formatearFecha(dia))" class="dia-check">✓</span>
+                    <span *ngIf="esFechaOcupada(formatearFecha(dia)) && !estaDiaSeleccionado(formatearFecha(dia))" class="dia-ocupado-icon">●</span>
                   </div>
                 </div>
               </div>
+
+              <!-- Leyenda del calendario -->
+              <div class="calendario-leyenda">
+                <div class="leyenda-item">
+                  <span class="leyenda-color leyenda-disponible"></span>
+                  <span>Disponible</span>
+                </div>
+                <div class="leyenda-item">
+                  <span class="leyenda-color leyenda-ocupado"></span>
+                  <span>Con registro (editable)</span>
+                </div>
+                <div class="leyenda-item">
+                  <span class="leyenda-color leyenda-seleccionado"></span>
+                  <span>Seleccionado</span>
+                </div>
+              </div>
               
-              <p class="calendario-hint">Haz clic en los días para seleccionarlos</p>
+              <p class="calendario-hint">Haz clic en los días para seleccionarlos. Los días en rojo ya tienen un registro asignado y pueden editarse.</p>
             </div>
 
             <!-- Panel derecho: Configuración de días seleccionados -->
@@ -176,15 +246,25 @@
                 <span class="badge-count">{{ diasSeleccionados.size }}</span>
               </div>
 
-              <div *ngIf="diasSeleccionados.size === 0" class="configuracion-empty">
+              <div *ngIf="isLoadingRegistros" class="configuracion-loading">
+                <span>Cargando registros existentes...</span>
+              </div>
+
+              <div *ngIf="!isLoadingRegistros && diasSeleccionados.size === 0" class="configuracion-empty">
                 <div class="empty-icon">📅</div>
                 <p>Selecciona uno o más días en el calendario para configurar las sesiones</p>
               </div>
 
-              <div *ngIf="diasSeleccionados.size > 0" class="configuracion-lista">
-                <div *ngFor="let fecha of diasSeleccionados.keys()" class="configuracion-dia-item">
+              <div *ngIf="!isLoadingRegistros && diasSeleccionados.size > 0" class="configuracion-lista">
+                <div *ngFor="let fecha of diasSeleccionados.keys()" 
+                     class="configuracion-dia-item"
+                     [class.dia-item-existente]="obtenerDatosDia(fecha)?.esExistente">
                   <div class="dia-item-header">
-                    <span class="dia-fecha">{{ formatearFechaParaMostrar(fecha) }}</span>
+                    <div class="dia-fecha-container">
+                      <span class="dia-fecha">{{ formatearFechaParaMostrar(fecha) }}</span>
+                      <span *ngIf="obtenerDatosDia(fecha)?.esExistente" class="badge-existente">Editar</span>
+                      <span *ngIf="!obtenerDatosDia(fecha)?.esExistente" class="badge-nuevo">Nuevo</span>
+                    </div>
                     <button type="button" (click)="deseleccionarDia(fecha)" class="btn-eliminar-dia">×</button>
                   </div>
                   
@@ -236,6 +316,128 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación -->
+  <div *ngIf="showConfirmacionModal" class="modal-overlay modal-overlay-confirmacion" (click)="cerrarModalConfirmacion()">
+    <div class="modal-content modal-confirmacion" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header-confirmacion">
+        <div class="confirmacion-icon">📋</div>
+        <h3>Confirmar Asignación</h3>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Información del paciente -->
+        <div class="confirmacion-paciente">
+          <h4>Paciente</h4>
+          <div class="paciente-info-resumen">
+            <span class="paciente-nombre">{{ paciente?.nombre }} {{ paciente?.apellido }}</span>
+            <span class="paciente-documento">{{ paciente?.tipoDocumento }} {{ paciente?.documento }}</span>
+          </div>
+        </div>
+
+        <!-- Resumen de asignaciones -->
+        <div class="confirmacion-resumen">
+          <h4>Resumen de Operaciones</h4>
+          
+          <div class="resumen-estadisticas">
+            <div class="estadistica-item estadistica-nuevo">
+              <span class="estadistica-numero">{{ obtenerRegistrosNuevos().length }}</span>
+              <span class="estadistica-label">Nuevos</span>
+            </div>
+            <div class="estadistica-item estadistica-editar">
+              <span class="estadistica-numero">{{ obtenerRegistrosActualizar().length }}</span>
+              <span class="estadistica-label">A Editar</span>
+            </div>
+            <div class="estadistica-item">
+              <span class="estadistica-numero">{{ calcularTotalSesiones() }}</span>
+              <span class="estadistica-label">Sesiones Total</span>
+            </div>
+          </div>
+
+          <!-- Registros Nuevos -->
+          <div *ngIf="obtenerRegistrosNuevos().length > 0" class="resumen-seccion">
+            <h5 class="seccion-titulo seccion-nuevo">🆕 Registros Nuevos ({{ obtenerRegistrosNuevos().length }})</h5>
+            <div class="resumen-tabla">
+              <div class="tabla-header">
+                <span class="col-fecha">Fecha</span>
+                <span class="col-servicio">Servicio</span>
+                <span class="col-sesiones">Sesiones</span>
+              </div>
+              <div class="tabla-body">
+                <div *ngFor="let fecha of obtenerRegistrosNuevos()" class="tabla-fila fila-nuevo">
+                  <span class="col-fecha">{{ formatearFechaParaMostrar(fecha) }}</span>
+                  <span class="col-servicio">{{ obtenerNombreServicio(obtenerDatosDia(fecha)?.servicioAbreviatura || '') }}</span>
+                  <span class="col-sesiones">{{ obtenerDatosDia(fecha)?.numeroSesiones }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Registros a Actualizar -->
+          <div *ngIf="obtenerRegistrosActualizar().length > 0" class="resumen-seccion">
+            <h5 class="seccion-titulo seccion-editar">✏️ Registros a Actualizar ({{ obtenerRegistrosActualizar().length }})</h5>
+            <div class="resumen-tabla">
+              <div class="tabla-header">
+                <span class="col-fecha">Fecha</span>
+                <span class="col-servicio">Servicio</span>
+                <span class="col-sesiones">Sesiones</span>
+              </div>
+              <div class="tabla-body">
+                <div *ngFor="let fecha of obtenerRegistrosActualizar()" class="tabla-fila fila-editar">
+                  <span class="col-fecha">{{ formatearFechaParaMostrar(fecha) }}</span>
+                  <span class="col-servicio">{{ obtenerNombreServicio(obtenerDatosDia(fecha)?.servicioAbreviatura || '') }}</span>
+                  <span class="col-sesiones">{{ obtenerDatosDia(fecha)?.numeroSesiones }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mensaje de confirmación -->
+        <div class="confirmacion-mensaje">
+          <span class="mensaje-icono">⚠️</span>
+          <p>¿Está seguro de que desea procesar estas operaciones? Los registros nuevos serán creados y los existentes serán actualizados.</p>
+        </div>
+      </div>
+
+      <div class="modal-actions modal-actions-confirmacion">
+        <button type="button" (click)="cerrarModalConfirmacion()" class="btn-cancelar">
+          Volver a Editar
+        </button>
+        <button type="button" (click)="confirmarAsignacion()" [disabled]="isSavingAsignar" class="btn-confirmar">
+          <span *ngIf="!isSavingAsignar">✓ Confirmar Asignación</span>
+          <span *ngIf="isSavingAsignar">Procesando...</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Error -->
+  <div *ngIf="showErrorModal" class="modal-overlay modal-overlay-error" (click)="cerrarErrorModal()">
+    <div class="modal-content modal-error" (click)="$event.stopPropagation()">
+      <div class="modal-header modal-header-error">
+        <div class="error-icon">❌</div>
+        <h3>{{ errorModalTitle }}</h3>
+      </div>
+      
+      <div class="modal-body modal-body-error">
+        <div class="error-contenido">
+          <p>{{ errorModalMessage }}</p>
+        </div>
+        
+        <div class="error-sugerencia">
+          <span class="sugerencia-icono">💡</span>
+          <p>Por favor, revise los datos e intente nuevamente. Si el problema persiste, contacte al administrador del sistema.</p>
+        </div>
+      </div>
+
+      <div class="modal-actions modal-actions-error">
+        <button type="button" (click)="cerrarErrorModal()" class="btn-entendido">
+          Entendido
+        </button>
       </div>
     </div>
   </div>
