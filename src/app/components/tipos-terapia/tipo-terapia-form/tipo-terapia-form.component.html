@@ -1,0 +1,45 @@
+<div class="tipo-terapia-form-container">
+  <h2>{{ isEditMode ? 'Editar Tipo de Terapia' : 'Nuevo Tipo de Terapia' }}</h2>
+
+  <form (ngSubmit)="onSubmit()" class="form">
+    <div class="form-group">
+      <label for="nombre">Nombre *</label>
+      <input
+        type="text"
+        id="nombre"
+        name="nombre"
+        [(ngModel)]="tipoTerapia.nombre"
+        required
+        placeholder="Ingrese el nombre del tipo de terapia"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="valorUnitario">Valor Unitario *</label>
+      <input
+        type="number"
+        id="valorUnitario"
+        name="valorUnitario"
+        [(ngModel)]="tipoTerapia.valorUnitario"
+        required
+        min="0.01"
+        step="0.01"
+        placeholder="Ingrese el valor unitario"
+      />
+    </div>
+
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" [disabled]="isLoading" class="btn-primary">
+        <span *ngIf="!isLoading">{{ isEditMode ? 'Actualizar' : 'Crear' }}</span>
+        <span *ngIf="isLoading">Guardando...</span>
+      </button>
+      <a routerLink="/tipos-terapia" class="btn-cancel">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+

@@ -1,0 +1,52 @@
+<div class="profesional-list-container">
+  <div class="header-actions">
+    <h2>Lista de Profesionales</h2>
+    <a routerLink="/profesionales/nuevo" class="btn-primary">Nuevo Profesional</a>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    Cargando profesionales...
+  </div>
+
+  <div *ngIf="!isLoading && profesionales.length === 0" class="empty-state">
+    No hay profesionales registrados
+  </div>
+
+  <table *ngIf="!isLoading && profesionales.length > 0" class="data-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Profesión</th>
+        <th>Email</th>
+        <th>Banco</th>
+        <th>Tipos de Terapia</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let profesional of profesionales">
+        <td>{{ profesional.id }}</td>
+        <td>{{ profesional.nombre }}</td>
+        <td>{{ profesional.profesion }}</td>
+        <td>{{ profesional.numeroCuentaBanco }}</td>
+        <td>{{ profesional.nombreBanco }}</td>
+        <td>
+          <span *ngFor="let tipo of profesional.tiposTerapia; let last = last">
+            {{ tipo.nombre }}<span *ngIf="!last">, </span>
+          </span>
+        </td>
+        <td class="actions">
+          <a [routerLink]="['/profesionales', profesional.id, 'editar']" class="btn-edit">Editar</a>
+          <button (click)="eliminarProfesional(profesional.id)" class="btn-delete">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+

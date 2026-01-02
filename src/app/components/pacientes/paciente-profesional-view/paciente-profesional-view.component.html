@@ -1,0 +1,61 @@
+<div class="paciente-profesional-container">
+  <div class="header-section">
+    <div class="header-left">
+      <h2>Gestión de Pacientes</h2>
+      <div class="filtro-section">
+        <input
+          type="text"
+          [(ngModel)]="filtroTexto"
+          (input)="filtrarPacientes()"
+          placeholder="Filtrar por nombre, apellido o cédula..."
+          class="filtro-input"
+        />
+      </div>
+    </div>
+    <div class="header-right">
+      <a routerLink="/pacientes/nuevo" class="btn-crear">+ Nuevo Paciente</a>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+
+  <div *ngIf="isLoading" class="loading">
+    Cargando pacientes...
+  </div>
+
+  <div *ngIf="!isLoading && pacientesFiltrados.length === 0" class="empty-state">
+    <p *ngIf="filtroTexto">No se encontraron pacientes con el filtro aplicado</p>
+    <p *ngIf="!filtroTexto">No hay pacientes registrados</p>
+  </div>
+
+  <div *ngIf="!isLoading && pacientesFiltrados.length > 0" class="pacientes-lista">
+    <table class="pacientes-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Apellido</th>
+          <th>Tipo Documento</th>
+          <th>Documento</th>
+          <th>Fecha Creación</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let paciente of pacientesFiltrados" class="paciente-row">
+          <td>{{ paciente.nombre }}</td>
+          <td>{{ paciente.apellido }}</td>
+          <td>{{ getTipoDocumentoLabel(paciente.tipoDocumento) }}</td>
+          <td>{{ paciente.documento }}</td>
+          <td>{{ paciente.fechaCreacion | date:'short' }}</td>
+          <td>
+            <a [routerLink]="['/pacientes', paciente.id]" class="btn-ver">Ver</a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+

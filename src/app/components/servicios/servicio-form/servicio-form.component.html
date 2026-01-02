@@ -1,0 +1,43 @@
+<div class="servicio-form-container">
+  <h2>{{ isEditMode ? 'Editar Servicio' : 'Nuevo Servicio' }}</h2>
+
+  <form (ngSubmit)="onSubmit()" class="form">
+    <div class="form-group">
+      <label for="nombreCompleto">Nombre Completo *</label>
+      <input
+        type="text"
+        id="nombreCompleto"
+        name="nombreCompleto"
+        [(ngModel)]="servicio.nombreCompleto"
+        required
+        placeholder="Ingrese el nombre completo"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="abreviatura">Abreviatura *</label>
+      <input
+        type="text"
+        id="abreviatura"
+        name="abreviatura"
+        [(ngModel)]="servicio.abreviatura"
+        required
+        placeholder="Ingrese la abreviatura"
+      />
+    </div>
+
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" [disabled]="isLoading" class="btn-primary">
+        <span *ngIf="!isLoading">{{ isEditMode ? 'Actualizar' : 'Crear' }}</span>
+        <span *ngIf="isLoading">Guardando...</span>
+      </button>
+      <a routerLink="/servicios" class="btn-cancel">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+

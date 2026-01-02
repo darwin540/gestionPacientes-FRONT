@@ -1,0 +1,44 @@
+<div class="tipo-terapia-list-container">
+  <div class="header-actions">
+    <h2>Lista de Tipos de Terapia</h2>
+    <a routerLink="/tipos-terapia/nuevo" class="btn-primary">Nuevo Tipo de Terapia</a>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    Cargando tipos de terapia...
+  </div>
+
+  <div *ngIf="!isLoading && tiposTerapia.length === 0" class="empty-state">
+    No hay tipos de terapia registrados
+  </div>
+
+  <table *ngIf="!isLoading && tiposTerapia.length > 0" class="data-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Valor Unitario</th>
+        <th>Fecha Creación</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let tipo of tiposTerapia">
+        <td>{{ tipo.id }}</td>
+        <td>{{ tipo.nombre }}</td>
+        <td>{{ tipo.valorUnitario | currency:'COP':'symbol':'1.0-0' }}</td>
+        <td>{{ tipo.fechaCreacion | date:'short' }}</td>
+        <td class="actions">
+          <a [routerLink]="['/tipos-terapia', tipo.id, 'editar']" class="btn-edit">Editar</a>
+          <button (click)="eliminarTipoTerapia(tipo.id)" class="btn-delete">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+

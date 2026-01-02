@@ -1,0 +1,69 @@
+<div class="paciente-form-container">
+  <h2>{{ isEditMode ? 'Editar Paciente' : 'Nuevo Paciente' }}</h2>
+
+  <form (ngSubmit)="onSubmit()" class="form">
+    <div class="form-group">
+      <label for="nombre">Nombre *</label>
+      <input
+        type="text"
+        id="nombre"
+        name="nombre"
+        [(ngModel)]="paciente.nombre"
+        required
+        placeholder="Ingrese el nombre"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="apellido">Apellido *</label>
+      <input
+        type="text"
+        id="apellido"
+        name="apellido"
+        [(ngModel)]="paciente.apellido"
+        required
+        placeholder="Ingrese el apellido"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="tipoDocumento">Tipo de Documento *</label>
+      <select
+        id="tipoDocumento"
+        name="tipoDocumento"
+        [(ngModel)]="paciente.tipoDocumento"
+        required
+      >
+        <option *ngFor="let tipo of tiposDocumento" [value]="tipo">
+          {{ getTipoDocumentoLabel(tipo) }}
+        </option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="documento">Documento *</label>
+      <input
+        type="text"
+        id="documento"
+        name="documento"
+        [(ngModel)]="paciente.documento"
+        required
+        placeholder="Ingrese el número de documento"
+      />
+    </div>
+
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" [disabled]="isLoading" class="btn-primary">
+        <span *ngIf="!isLoading">{{ isEditMode ? 'Actualizar' : 'Crear' }}</span>
+        <span *ngIf="isLoading">Guardando...</span>
+      </button>
+      <a routerLink="/pacientes" class="btn-cancel">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+

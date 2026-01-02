@@ -1,0 +1,225 @@
+<div class="paciente-detail-container">
+  <div class="header-section">
+    <button (click)="router.navigate(['/pacientes'])" class="btn-volver-lista">
+      ← Volver a la lista
+    </button>
+    <h2>Información del Paciente</h2>
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    Cargando información del paciente...
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="!isLoading && !paciente && !errorMessage" class="empty-state">
+    No se encontró información del paciente.
+  </div>
+
+      <div *ngIf="!isLoading && paciente" class="paciente-content">
+        <div class="detalle-section">
+          <div class="section-header">
+            <h3>Datos Personales</h3>
+            <div class="action-buttons">
+              <button (click)="abrirModalEditar()" class="btn-editar">Editar</button>
+              <button (click)="abrirModalAsignar()" class="btn-asignar">Asignar Tipo de Terapia</button>
+            </div>
+          </div>
+          <div class="detalle-grid">
+            <div class="detalle-item">
+              <span class="detalle-label">Nombre:</span>
+              <span class="detalle-value">{{ paciente.nombre }}</span>
+            </div>
+            <div class="detalle-item">
+              <span class="detalle-label">Apellido:</span>
+              <span class="detalle-value">{{ paciente.apellido }}</span>
+            </div>
+            <div class="detalle-item">
+              <span class="detalle-label">Tipo de Documento:</span>
+              <span class="detalle-value">{{ getTipoDocumentoLabel(paciente.tipoDocumento) }}</span>
+            </div>
+            <div class="detalle-item">
+              <span class="detalle-label">Documento:</span>
+              <span class="detalle-value">{{ paciente.documento }}</span>
+            </div>
+            <div class="detalle-item">
+              <span class="detalle-label">Fecha de Creación:</span>
+              <span class="detalle-value">{{ paciente.fechaCreacion | date:'short' }}</span>
+            </div>
+            <div class="detalle-item">
+              <span class="detalle-label">Última Actualización:</span>
+              <span class="detalle-value">{{ paciente.fechaActualizacion | date:'short' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+  <!-- Modal de Edición -->
+  <div *ngIf="showEditModal" class="modal-overlay" (click)="cerrarModalEditar()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Editar Paciente</h3>
+        <button (click)="cerrarModalEditar()" class="btn-cerrar-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form (ngSubmit)="guardarEdicion()">
+          <div class="form-group">
+            <label for="edit-nombre">Nombre *</label>
+            <input
+              type="text"
+              id="edit-nombre"
+              [(ngModel)]="editForm.nombre"
+              name="edit-nombre"
+              required
+              placeholder="Ingrese el nombre"
+            />
+          </div>
+          <div class="form-group">
+            <label for="edit-apellido">Apellido *</label>
+            <input
+              type="text"
+              id="edit-apellido"
+              [(ngModel)]="editForm.apellido"
+              name="edit-apellido"
+              required
+              placeholder="Ingrese el apellido"
+            />
+          </div>
+          <div class="form-group">
+            <label for="edit-tipoDocumento">Tipo de Documento *</label>
+            <select
+              id="edit-tipoDocumento"
+              name="edit-tipoDocumento"
+              [(ngModel)]="editForm.tipoDocumento"
+              required
+            >
+              <option [value]="TipoDocumento.CC">Cédula</option>
+              <option [value]="TipoDocumento.TI">Tarjeta de Identidad</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-documento">Documento *</label>
+            <input
+              type="text"
+              id="edit-documento"
+              [(ngModel)]="editForm.documento"
+              name="edit-documento"
+              required
+              placeholder="Ingrese el número de documento"
+            />
+          </div>
+          <div *ngIf="editErrorMessage" class="error-message">
+            {{ editErrorMessage }}
+          </div>
+          <div class="modal-actions">
+            <button type="button" (click)="cerrarModalEditar()" class="btn-cancelar">Cancelar</button>
+            <button type="submit" [disabled]="isSavingEdit" class="btn-guardar">
+              <span *ngIf="!isSavingEdit">Guardar</span>
+              <span *ngIf="isSavingEdit">Guardando...</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Asignación de Tipo de Terapia -->
+  <div *ngIf="showAsignarModal" class="modal-overlay" (click)="cerrarModalAsignar()">
+    <div class="modal-content modal-content-calendario" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Asignar Tipo de Terapia</h3>
+        <button (click)="cerrarModalAsignar()" class="btn-cerrar-modal">&times;</button>
+      </div>
+      <div class="modal-body-calendario">
+        <form (ngSubmit)="guardarAsignacion()">
+          <!-- Calendario -->
+          <div class="calendario-container">
+            <div class="calendario-header">
+              <button type="button" (click)="mesAnterior()" class="btn-nav-mes">‹</button>
+              <h4>{{ obtenerNombreMes() }} {{ mesActual.getFullYear() }}</h4>
+              <button type="button" (click)="mesSiguiente()" class="btn-nav-mes">›</button>
+            </div>
+            
+            <div class="calendario-dias-semana">
+              <div *ngFor="let i of [0,1,2,3,4,5,6]" class="dia-semana-header">
+                {{ obtenerNombreDiaSemana(i) }}
+              </div>
+            </div>
+            
+            <div class="calendario-grid">
+              <div
+                *ngFor="let dia of obtenerDiasDelMes()"
+                class="calendario-dia"
+                [class.dia-actual]="esDiaDelMesActual(dia)"
+                [class.dia-con-datos]="estaDiaSeleccionado(formatearFecha(dia)) && obtenerDatosDia(formatearFecha(dia))?.servicioAbreviatura"
+                [class.dia-otro-mes]="!esDiaDelMesActual(dia)"
+                (click)="seleccionarDia(formatearFecha(dia)); $event.stopPropagation()"
+              >
+                <div class="dia-numero">{{ dia.getDate() }}</div>
+                <div *ngIf="esDiaDelMesActual(dia)" class="dia-campos" (click)="$event.stopPropagation()">
+                  <select
+                    [id]="'servicio-' + formatearFecha(dia)"
+                    [name]="'servicio-' + formatearFecha(dia)"
+                    [value]="obtenerDatosDia(formatearFecha(dia))?.servicioAbreviatura || ''"
+                    (change)="actualizarServicioDia(formatearFecha(dia), $any($event.target).value)"
+                    (click)="seleccionarDia(formatearFecha(dia)); $event.stopPropagation()"
+                    class="dia-select-servicio"
+                  >
+                    <option value="">Servicio</option>
+                    <option *ngFor="let servicio of servicios" [value]="servicio.abreviatura">
+                      {{ servicio.abreviatura }}
+                    </option>
+                  </select>
+                  <input
+                    type="number"
+                    [id]="'sesiones-' + formatearFecha(dia)"
+                    [name]="'sesiones-' + formatearFecha(dia)"
+                    [value]="obtenerDatosDia(formatearFecha(dia))?.numeroSesiones || ''"
+                    (change)="actualizarSesionesDia(formatearFecha(dia), +$any($event.target).value)"
+                    (click)="seleccionarDia(formatearFecha(dia)); $event.stopPropagation()"
+                    placeholder="Ses."
+                    min="1"
+                    max="2"
+                    class="dia-input-sesiones"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resumen de días con datos -->
+          <div *ngIf="diasSeleccionados.size > 0" class="dias-seleccionados-lista">
+            <h5>Resumen de Días con Datos ({{ diasSeleccionados.size }})</h5>
+            <div class="dias-lista">
+              <div *ngFor="let fecha of diasSeleccionados.keys()" class="dia-lista-item">
+                <span>{{ formatearFechaParaMostrar(fecha) }}</span>
+                <div class="dia-lista-info">
+                  <span *ngIf="obtenerDatosDia(fecha)?.servicioAbreviatura">
+                    {{ obtenerDatosDia(fecha)?.servicioAbreviatura }}
+                  </span>
+                  <span *ngIf="obtenerDatosDia(fecha)?.numeroSesiones">
+                    {{ obtenerDatosDia(fecha)?.numeroSesiones }} sesión(es)
+                  </span>
+                </div>
+                <button type="button" (click)="deseleccionarDia(fecha)" class="btn-eliminar-dia-lista">×</button>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="asignarErrorMessage" class="error-message">
+            {{ asignarErrorMessage }}
+          </div>
+          <div class="modal-actions">
+            <button type="button" (click)="cerrarModalAsignar()" class="btn-cancelar">Cancelar</button>
+            <button type="submit" [disabled]="isSavingAsignar" class="btn-guardar">
+              <span *ngIf="!isSavingAsignar">Asignar</span>
+              <span *ngIf="isSavingAsignar">Asignando...</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

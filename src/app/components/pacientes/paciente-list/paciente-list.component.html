@@ -1,0 +1,48 @@
+<div class="paciente-list-container">
+  <div class="header-actions">
+    <h2>Lista de Pacientes</h2>
+    <a routerLink="/pacientes/nuevo" class="btn-primary">Nuevo Paciente</a>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    Cargando pacientes...
+  </div>
+
+  <div *ngIf="!isLoading && pacientes.length === 0" class="empty-state">
+    No hay pacientes registrados
+  </div>
+
+  <table *ngIf="!isLoading && pacientes.length > 0" class="data-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>Tipo Documento</th>
+        <th>Documento</th>
+        <th>Fecha Creación</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let paciente of pacientes">
+        <td>{{ paciente.id }}</td>
+        <td>{{ paciente.nombre }}</td>
+        <td>{{ paciente.apellido }}</td>
+        <td>{{ getTipoDocumentoLabel(paciente.tipoDocumento) }}</td>
+        <td>{{ paciente.documento }}</td>
+        <td>{{ paciente.fechaCreacion | date:'short' }}</td>
+        <td class="actions">
+          <a [routerLink]="['/pacientes', paciente.id, 'editar']" class="btn-edit">Editar</a>
+          <button (click)="eliminarPaciente(paciente.id)" class="btn-delete">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+

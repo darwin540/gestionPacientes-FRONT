@@ -1,0 +1,117 @@
+<div class="profesional-form-container">
+  <h2>{{ isEditMode ? 'Editar Profesional' : 'Nuevo Profesional' }}</h2>
+
+  <form (ngSubmit)="onSubmit()" class="form">
+    <div class="form-group">
+      <label for="nombre">Nombre *</label>
+      <input
+        type="text"
+        id="nombre"
+        name="nombre"
+        [(ngModel)]="profesional.nombre"
+        required
+        placeholder="Ingrese el nombre"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="profesion">Profesión *</label>
+      <input
+        type="text"
+        id="profesion"
+        name="profesion"
+        [(ngModel)]="profesional.profesion"
+        required
+        placeholder="Ingrese la profesión"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email *</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        [(ngModel)]="profesional.email"
+        required
+        placeholder="Ingrese el email"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="numeroCuentaBanco">Número de Cuenta *</label>
+      <input
+        type="text"
+        id="numeroCuentaBanco"
+        name="numeroCuentaBanco"
+        [(ngModel)]="profesional.numeroCuentaBanco"
+        required
+        placeholder="Ingrese el número de cuenta"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="nombreBanco">Nombre del Banco *</label>
+      <input
+        type="text"
+        id="nombreBanco"
+        name="nombreBanco"
+        [(ngModel)]="profesional.nombreBanco"
+        required
+        placeholder="Ingrese el nombre del banco"
+      />
+    </div>
+
+    <div *ngIf="!isEditMode" class="form-group">
+      <label for="username">Nombre de Usuario *</label>
+      <input
+        type="text"
+        id="username"
+        name="username"
+        [(ngModel)]="profesional.username"
+        required
+        placeholder="Ingrese el nombre de usuario"
+      />
+    </div>
+
+    <div *ngIf="!isEditMode" class="form-group">
+      <label for="password">Contraseña *</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        [(ngModel)]="profesional.password"
+        required
+        placeholder="Ingrese la contraseña"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Tipos de Terapia</label>
+      <div class="checkbox-group">
+        <label *ngFor="let tipo of tiposTerapia" class="checkbox-label">
+          <input
+            type="checkbox"
+            [checked]="isTipoTerapiaSeleccionado(tipo.id)"
+            (change)="toggleTipoTerapia(tipo.id)"
+          />
+          <span>{{ tipo.nombre }}</span>
+        </label>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" [disabled]="isLoading" class="btn-primary">
+        <span *ngIf="!isLoading">{{ isEditMode ? 'Actualizar' : 'Crear' }}</span>
+        <span *ngIf="isLoading">Guardando...</span>
+      </button>
+      <a routerLink="/profesionales" class="btn-cancel">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+

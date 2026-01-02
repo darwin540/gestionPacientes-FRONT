@@ -1,0 +1,83 @@
+<div class="registro-terapia-form-container">
+  <h2>{{ isEditMode ? 'Editar Registro de Terapia' : 'Nuevo Registro de Terapia' }}</h2>
+
+  <form (ngSubmit)="onSubmit()" class="form">
+    <div class="form-group">
+      <label for="pacienteId">Paciente *</label>
+      <select
+        id="pacienteId"
+        name="pacienteId"
+        [(ngModel)]="registro.pacienteId"
+        required
+      >
+        <option value="0">Seleccione un paciente</option>
+        <option *ngFor="let paciente of pacientes" [value]="paciente.id">
+          {{ paciente.nombre }} {{ paciente.apellido }}
+        </option>
+      </select>
+    </div>
+
+    <div class="registros-section">
+      <div class="section-header">
+        <h3>Registros</h3>
+        <button type="button" (click)="agregarRegistro()" class="btn-add">Agregar Registro</button>
+      </div>
+
+      <div *ngFor="let item of registrosItems; let i = index" class="registro-item">
+        <div class="form-group">
+          <label>Fecha *</label>
+          <input
+            type="date"
+            [(ngModel)]="item.fecha"
+            [name]="'fecha' + i"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Servicio *</label>
+          <select
+            [(ngModel)]="item.servicioAbreviatura"
+            [name]="'servicio' + i"
+            required
+          >
+            <option value="">Seleccione un servicio</option>
+            <option *ngFor="let servicio of servicios" [value]="servicio.abreviatura">
+              {{ servicio.nombreCompleto }} ({{ servicio.abreviatura }})
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Número de Sesiones *</label>
+          <input
+            type="number"
+            [(ngModel)]="item.numeroSesiones"
+            [name]="'sesiones' + i"
+            min="1"
+            max="2"
+            required
+          />
+        </div>
+
+        <button *ngIf="registrosItems.length > 1" type="button" (click)="eliminarRegistro(i)" class="btn-remove">
+          Eliminar
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <div class="form-actions">
+      <button type="submit" [disabled]="isLoading" class="btn-primary">
+        <span *ngIf="!isLoading">{{ isEditMode ? 'Actualizar' : 'Crear' }}</span>
+        <span *ngIf="isLoading">Guardando...</span>
+      </button>
+      <a routerLink="/registros-terapia" class="btn-cancel">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+

@@ -1,0 +1,22 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>Gestión de Pacientes</h1>
+    <div class="user-info">
+      <span>Bienvenido, {{ nombreProfesional }}</span>
+      <button (click)="logout()" class="logout-button">Cerrar Sesión</button>
+    </div>
+  </header>
+
+  <nav class="dashboard-nav">
+    <a routerLink="/pacientes" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">Pacientes</a>
+    <a *ngIf="isAdmin" routerLink="/profesionales" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">Profesionales</a>
+    <a *ngIf="isAdmin" routerLink="/registros-terapia" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">Registros de Terapia</a>
+    <a *ngIf="isAdmin" routerLink="/servicios" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">Servicios</a>
+    <a *ngIf="isAdmin" routerLink="/tipos-terapia" routerLinkActive="active" [routerLinkActiveOptions]="{exact: false}">Tipos de Terapia</a>
+  </nav>
+
+  <main class="dashboard-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
+

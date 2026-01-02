@@ -1,0 +1,50 @@
+<div class="registro-terapia-list-container">
+  <div class="header-actions">
+    <h2>Registros de Terapia</h2>
+    <a routerLink="/registros-terapia/nuevo" class="btn-primary">Nuevo Registro</a>
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading">
+    Cargando registros...
+  </div>
+
+  <div *ngIf="!isLoading && registros.length === 0" class="empty-state">
+    No hay registros de terapia
+  </div>
+
+  <table *ngIf="!isLoading && registros.length > 0" class="data-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Paciente</th>
+        <th>Profesional</th>
+        <th>Tipo Terapia</th>
+        <th>Servicio</th>
+        <th>Fecha</th>
+        <th>Sesiones</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let registro of registros">
+        <td>{{ registro.id }}</td>
+        <td>{{ registro.pacienteNombre }} {{ registro.pacienteApellido }}</td>
+        <td>{{ registro.profesionalNombre }}</td>
+        <td>{{ registro.tipoTerapiaNombre }}</td>
+        <td>{{ registro.servicioNombreCompleto }}</td>
+        <td>{{ registro.fecha | date:'short' }}</td>
+        <td>{{ registro.numeroSesiones }}</td>
+        <td class="actions">
+          <a [routerLink]="['/registros-terapia', registro.id, 'editar']" class="btn-edit">Editar</a>
+          <button (click)="eliminarRegistro(registro.id)" class="btn-delete">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
